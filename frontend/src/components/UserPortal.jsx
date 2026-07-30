@@ -282,8 +282,8 @@ function CheckOutForm() {
   const [form, setForm] = useState({
     rental_id: '',
     checkout_date: today,
-    engine_hrs_per_day: '',
-    idle_hrs_per_day: '',
+    total_engine_hours: '',
+    total_idle_hours: '',
     fuel_usage_liters: '',
     operator_id: '',
   });
@@ -293,8 +293,8 @@ function CheckOutForm() {
 
   const handleChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const eng = parseFloat(form.engine_hrs_per_day);
-  const idle = parseFloat(form.idle_hrs_per_day);
+  const eng = parseFloat(form.total_engine_hours);
+  const idle = parseFloat(form.total_idle_hours);
   const idleExceedsEngine = !isNaN(eng) && !isNaN(idle) && idle > eng;
   const idleRatio = (!isNaN(eng) && !isNaN(idle) && eng > 0 && idle <= eng)
     ? ((idle / eng) * 100).toFixed(1) : null;
@@ -302,9 +302,9 @@ function CheckOutForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(''); setResult(null);
-    if (isNaN(eng) || eng <= 0) { setError('Engine hours/day must be a positive number.'); return; }
-    if (isNaN(idle) || idle < 0) { setError('Idle hours/day cannot be negative.'); return; }
-    if (idleExceedsEngine) { setError('Idle hours/day cannot exceed engine hours/day.'); return; }
+    if (isNaN(eng) || eng <= 0) { setError('Total engine hours must be a positive number.'); return; }
+    if (isNaN(idle) || idle < 0) { setError('Total idle hours cannot be negative.'); return; }
+    if (idleExceedsEngine) { setError('Total idle hours cannot exceed total engine hours.'); return; }
     const fuel = parseFloat(form.fuel_usage_liters);
     if (isNaN(fuel) || fuel < 0) { setError('Fuel usage must be 0 or greater.'); return; }
 
@@ -316,8 +316,8 @@ function CheckOutForm() {
         body: JSON.stringify({
           rental_id: form.rental_id.trim().toUpperCase(),
           checkout_date: form.checkout_date,
-          engine_hrs_per_day: eng,
-          idle_hrs_per_day: idle,
+          total_engine_hours: eng,
+          total_idle_hours: idle,
           fuel_usage_liters: fuel,
           operator_id: form.operator_id.trim().toUpperCase(),
         }),
@@ -372,25 +372,99 @@ function CheckOutForm() {
           {result.is_overdue && <SummaryRow label="Status" value="⚠ OVERDUE" accent="red" />}
         </div>
 
-        {/* Usage Analytics */}
+        {/* Usage Analytics — Totals entered + derived averages */}
         <div className="bg-[#1a1f2e] border border-[#2a3045] rounded-xl p-4 space-y-0">
           <p className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-bold mb-2">Usage Analytics</p>
-          <SummaryRow label="Engine Hrs / Day" value={`${result.engine_hrs_per_day} hrs`} />
-          <SummaryRow label="Idle Hrs / Day" value={`${result.idle_hrs_per_day} hrs`} />
-          <SummaryRow label="Downtime / Day" value={`${result.downtime_per_day_hrs} hrs`} accent={downAccent} />
-          <SummaryRow label="Idle Ratio" value={`${result.idle_ratio_pct}%`} accent={idleAccent} />
-          <SummaryRow label="Utilization" value={`${result.utilization_pct}%`} accent={result.utilization_pct < 30 ? 'red' : 'emerald'} />
-        </div>
-
-        {/* Totals */}
-        <div className="bg-[#1a1f2e] border border-[#2a3045] rounded-xl p-4 space-y-0">
-          <p className="text-[10px] text-yellow-400/70 uppercase tracking-widest font-bold mb-2">Totals Over {result.actual_rental_days} Days</p>
           <SummaryRow label="Total Engine Hours" value={`${result.total_engine_hours} hrs`} accent="emerald" />
           <SummaryRow label="Total Idle Hours" value={`${result.total_idle_hours} hrs`} accent={idleAccent} />
-          <SummaryRow label="Total Runtime (Productive)" value={`${result.total_runtime_hours} hrs`} highlight />
-          <SummaryRow label="Total Downtime" value={`${result.total_downtime_hours} hrs`} accent={downAccent} />
+          <SummaryRow label="Total Active (Productive) Hours" value={`${result.total_active_hours} hrs`} highlight />
+          <SummaryRow label="Total Downtime Hours" value={`${result.total_downtime_hours} hrs`} accent={downAccent} />
+          <div className="pt-2 mt-1 border-t border-[#2a3045]">
+            <p className="text-[9px] text-slate-500 uppercase tracking-widest mb-1.5">Derived daily averages (total ÷ {result.actual_rental_days} days)</p>
+            <SummaryRow label="Avg Engine Hrs / Day" value={`${result.engine_hrs_per_day_avg} hrs`} />
+            <SummaryRow label="Avg Idle Hrs / Day" value={`${result.idle_hrs_per_day_avg} hrs`} />
+            <SummaryRow label="Avg Downtime / Day" value={`${result.downtime_per_day_hrs} hrs`} />
+          </div>
+          <SummaryRow label="Idle Ratio" value={`${result.idle_ratio_pct}%`} accent={idleAccent} />
+          <SummaryRow label="Utilization" value={`${result.utilization_pct}%`} accent={result.utilization_pct < 30 ? 'red' : 'emerald'} />
           <SummaryRow label="Fuel Used" value={`${result.fuel_usage_liters} L`} />
         </div>
+
+        {/* Financial Penalty Invoice */}
+        {result.penalty_invoice && (
+          <div className={`bg-[#1a1f2e] border rounded-xl p-4 space-y-0 ${
+            result.penalty_invoice.penalty_applied
+              ? 'border-red-500/40'
+              : 'border-emerald-500/30'
+          }`}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] text-red-400/80 uppercase tracking-widest font-bold">
+                🔥 Excess Idling Penalty Invoice
+              </p>
+              {result.penalty_invoice.penalty_applied ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30 font-semibold">CHARGE APPLIED</span>
+              ) : (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">NO CHARGE</span>
+              )}
+            </div>
+            <SummaryRow label="Total Idle Hours Logged" value={`${result.penalty_invoice.total_idle_hours} hrs`} />
+            <SummaryRow label="Permissible Idle Threshold" value={`${result.penalty_invoice.permissible_idle_total_hrs} hrs (2.5h/day)`} accent="emerald" />
+            <SummaryRow
+              label="Excess Idle Hours"
+              value={`${result.penalty_invoice.excess_idle_hours > 0 ? '+' : ''}${result.penalty_invoice.excess_idle_hours} hrs`}
+              accent={result.penalty_invoice.excess_idle_hours > 0 ? 'red' : 'emerald'}
+            />
+            <SummaryRow label="Wasted Fuel (3.5 L/hr)" value={`${result.penalty_invoice.wasted_fuel_liters} L`} accent={result.penalty_invoice.wasted_fuel_liters > 0 ? 'amber' : 'emerald'} />
+            <SummaryRow label="Fuel Penalty ($3.25/L)" value={`$${result.penalty_invoice.fuel_penalty_usd.toFixed(2)}`} accent={result.penalty_invoice.fuel_penalty_usd > 0 ? 'red' : 'emerald'} />
+            <SummaryRow label="Idling Penalty ($60/hr)" value={`$${result.penalty_invoice.idle_penalty_usd.toFixed(2)}`} accent={result.penalty_invoice.idle_penalty_usd > 0 ? 'red' : 'emerald'} />
+            <div className={`flex justify-between items-center pt-2 mt-1 border-t ${
+              result.penalty_invoice.penalty_applied ? 'border-red-500/30' : 'border-emerald-500/20'
+            }`}>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-300">⚠ Total Excess Idling Penalty</span>
+              <span className={`text-base font-black font-mono ${
+                result.penalty_invoice.penalty_applied ? 'text-red-400' : 'text-emerald-400'
+              }`}>${result.penalty_invoice.total_penalty_usd.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Engine-Hour Maintenance Health */}
+        {result.maintenance_health && (
+          <div className="bg-[#1a1f2e] border border-[#2a3045] rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] text-blue-400/80 uppercase tracking-widest font-bold">🔧 Engine-Hour Maintenance Health</p>
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold border"
+                style={{ color: result.maintenance_health.maint_color, borderColor: result.maintenance_health.maint_color + '50', background: result.maintenance_health.maint_color + '15' }}>
+                {result.maintenance_health.maint_status}
+              </span>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs mb-1.5">
+                <span className="text-slate-400">Active Engine Hours toward next service</span>
+                <span className="font-mono font-bold text-white">
+                  {result.maintenance_health.hours_since_last_service} / {result.maintenance_health.service_interval_hrs} hrs
+                </span>
+              </div>
+              <div className="w-full bg-[#0d1117] rounded-full h-3 overflow-hidden border border-[#2a3045]">
+                <div
+                  className="h-3 rounded-full transition-all duration-700"
+                  style={{
+                    width: `${Math.min(result.maintenance_health.service_life_pct, 100)}%`,
+                    background: result.maintenance_health.maint_color,
+                    boxShadow: `0 0 8px ${result.maintenance_health.maint_color}80`,
+                  }}
+                />
+              </div>
+              <div className="flex justify-between mt-1.5">
+                <span className="text-[10px] text-slate-500">{result.maintenance_health.service_life_pct}% of interval elapsed</span>
+                <span className="text-[10px]" style={{ color: result.maintenance_health.maint_color }}>
+                  {result.maintenance_health.hours_until_service} hrs until service
+                </span>
+              </div>
+            </div>
+            <SummaryRow label="Cumulative Active Hours" value={`${result.maintenance_health.cumulative_active_hours} hrs`} />
+          </div>
+        )}
 
         <SmolLM2InsightCard prompt={
           `Check-Out Summary:\n` +
@@ -406,11 +480,15 @@ function CheckOutForm() {
           `Total Runtime (Productive): ${result.total_runtime_hours} hrs\n` +
           `Total Downtime: ${result.total_downtime_hours} hrs\n` +
           `Fuel Used: ${result.fuel_usage_liters} L\n` +
-          `Anomaly Status: ${result.anomaly_flag}`
+          `Anomaly Status: ${result.anomaly_flag}\n` +
+          (result.penalty_invoice?.penalty_applied
+            ? `⚠ EXCESS IDLING PENALTY: $${result.penalty_invoice.total_penalty_usd.toFixed(2)} (${result.penalty_invoice.excess_idle_hours} excess idle hrs → wasted ${result.penalty_invoice.wasted_fuel_liters}L fuel)\n`
+            : `✓ No idling penalty — within 2.5h/day threshold\n`) +
+          `Maintenance Health: ${result.maintenance_health?.maint_status} (${result.maintenance_health?.hours_until_service} hrs until next service)`
         } />
 
         <button
-          onClick={() => { setResult(null); setError(''); setForm({ rental_id:'',checkout_date:today,engine_hrs_per_day:'',idle_hrs_per_day:'',fuel_usage_liters:'',operator_id:'' }); }}
+          onClick={() => { setResult(null); setError(''); setForm({ rental_id:'',checkout_date:today,total_engine_hours:'',total_idle_hours:'',fuel_usage_liters:'',operator_id:'' }); }}
           className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2.5 rounded-xl text-sm transition-all"
         >
           Check-Out Another Equipment
@@ -450,11 +528,11 @@ function CheckOutForm() {
         <FieldRow label="Check-Out Date" icon={Calendar}>
           <input type="date" name="checkout_date" value={form.checkout_date} onChange={handleChange} required className={inputCls + ' [color-scheme:dark]'} />
         </FieldRow>
-        <FieldRow label="Engine Hrs / Day" icon={Zap}>
-          <input type="number" step="0.1" name="engine_hrs_per_day" value={form.engine_hrs_per_day} onChange={handleChange} required min="0.1" placeholder="e.g. 8.5" className={inputCls} />
+        <FieldRow label="Total Engine Hours (entire rental)" icon={Zap}>
+          <input type="number" step="0.1" name="total_engine_hours" value={form.total_engine_hours} onChange={handleChange} required min="0.1" placeholder="e.g. 210" className={inputCls} />
         </FieldRow>
-        <FieldRow label="Idle Hrs / Day" icon={Clock}>
-          <input type="number" step="0.1" name="idle_hrs_per_day" value={form.idle_hrs_per_day} onChange={handleChange} required min="0" placeholder="e.g. 2.0"
+        <FieldRow label="Total Idle Hours (entire rental)" icon={Clock}>
+          <input type="number" step="0.1" name="total_idle_hours" value={form.total_idle_hours} onChange={handleChange} required min="0" placeholder="e.g. 35"
             className={inputCls + (idleExceedsEngine ? ' border-red-500/60' : '')} />
         </FieldRow>
         <FieldRow label="Fuel Usage (Liters)" icon={Fuel} span>
@@ -463,15 +541,15 @@ function CheckOutForm() {
       </div>
 
       {/* Live idle validation / preview */}
-      {form.engine_hrs_per_day && form.idle_hrs_per_day && eng > 0 && (
+      {form.total_engine_hours && form.total_idle_hours && eng > 0 && (
         idleExceedsEngine ? (
           <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-sm text-red-300">
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0 text-red-400" />
-            <span><strong>Invalid:</strong> Idle Hrs/Day ({form.idle_hrs_per_day}) cannot exceed Engine Hrs/Day ({form.engine_hrs_per_day}). Engine runtime must always ≥ idle time.</span>
+            <span><strong>Invalid:</strong> Total Idle Hrs ({form.total_idle_hours}h) cannot exceed Total Engine Hrs ({form.total_engine_hours}h). Idle time is a subset of engine-on time.</span>
           </div>
         ) : (
           <div className="text-xs bg-[#1a1f2e] border border-[#2a3045] rounded-lg px-3 py-2 flex items-center justify-between">
-            <span className="text-slate-500">Idle Ratio Preview</span>
+            <span className="text-slate-500">Idle Ratio Preview ({form.total_idle_hours}h ÷ {form.total_engine_hours}h)</span>
             <span className={idleRatio > 75 ? 'text-red-400 font-bold' : idleRatio > 50 ? 'text-amber-400 font-bold' : 'text-emerald-400 font-bold'}>
               {idleRatio}% — {idleRatio > 75 ? '⚠ HIGH_IDLE' : idleRatio > 50 ? '⚠ UNDERUTILIZED' : '✓ OPTIMAL'}
             </span>

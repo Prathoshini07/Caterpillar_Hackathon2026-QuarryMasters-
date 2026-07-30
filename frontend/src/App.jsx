@@ -5,6 +5,7 @@ import AssetDashboard from './components/AssetDashboard';
 import UserPortal from './components/UserPortal';
 import HistoryPortal from './components/HistoryPortal';
 import AnomalyDetection from './components/AnomalyDetection';
+import OptimizationPortal from './components/OptimizationPortal';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing'); // 'landing' or 'dashboard'
@@ -73,6 +74,10 @@ export default function App() {
             {activeTab === 'anomaly-detection' ? (
               <div className="p-6">
                 <AnomalyDetection />
+              </div>
+            ) : activeTab === 'optimization' ? (
+              <div className="p-6">
+                <OptimizationPortal />
               </div>
             ) : (
               <AssetDashboard
