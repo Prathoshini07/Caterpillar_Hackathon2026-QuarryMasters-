@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base, SessionLocal
 from models import Site, Operator, Equipment, RentalLog, DemandForecast
-from routers import dashboard, portal
+from routers import dashboard, portal, anomaly
 from seed_data import generate_100_seeds
 
 app = FastAPI(
@@ -23,6 +23,7 @@ app.add_middleware(
 # Register Routers
 app.include_router(dashboard.router)
 app.include_router(portal.router)
+app.include_router(anomaly.router)
 
 @app.on_event("startup")
 def startup_db():
