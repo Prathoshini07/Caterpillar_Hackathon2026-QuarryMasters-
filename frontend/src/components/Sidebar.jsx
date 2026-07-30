@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Zap, Truck, AlertTriangle, Gauge, Calendar, Database, RefreshCw, ChevronLeft, ChevronRight, Layers, Bell } from 'lucide-react';
+import { Home, Zap, Truck, AlertTriangle, Gauge, Calendar, Database, RefreshCw, ChevronLeft, ChevronRight, Layers, Bell, TrendingUp } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollapsed, onReseed, isReseeding }) {
   const navItems = [
@@ -10,6 +10,7 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
     { id: 'notifications-alerts', label: '3.5. Notifications & Alerts', icon: Bell, badge: 'Today' },
     { id: 'underutilized', label: '4. Underutilized Assets', icon: Gauge },
     { id: 'datewise-returns', label: '5. Datewise Returns', icon: Calendar },
+    { id: 'demand-forecast', label: '7. Demand Forecast', icon: TrendingUp, badge: 'AI ML' },
     { id: 'equipment-details', label: '6. Live Details', icon: Layers },
   ];
 

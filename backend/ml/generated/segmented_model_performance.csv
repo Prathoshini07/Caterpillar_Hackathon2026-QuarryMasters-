@@ -1,0 +1,29 @@
+n,MAE,RMSE,exact_acc,within1_acc,underpred_rate,overpred_rate,segment,split,model
+900,0.3067,0.6377,0.7333,0.9667,13.33,13.33,All Rows,validation,Persistence
+900,0.3146,0.464,0.8211,0.98,15.44,2.44,All Rows,validation,CatBoost
+660,0.0,0.0,1.0,1.0,0.0,0.0,Stable Demand,validation,Persistence
+660,0.1924,0.2423,0.9545,1.0,3.79,0.76,Stable Demand,validation,CatBoost
+240,1.15,1.2349,0.0,0.875,50.0,50.0,Any Change,validation,Persistence
+240,0.6506,0.8036,0.4542,0.925,47.5,7.08,Any Change,validation,CatBoost
+120,1.1417,1.2007,0.0,0.8667,100.0,0.0,Increase,validation,Persistence
+120,0.9324,1.0519,0.0667,0.8583,93.33,0.0,Increase,validation,CatBoost
+120,1.1583,1.2682,0.0,0.8833,0.0,100.0,Decrease,validation,Persistence
+120,0.3688,0.4302,0.8417,0.9917,1.67,14.17,Decrease,validation,CatBoost
+101,1.099,1.1389,0.0,0.901,100.0,0.0,Zero-to-Positive,validation,Persistence
+101,0.8189,0.8712,0.0792,0.9208,92.08,0.0,Zero-to-Positive,validation,CatBoost
+103,1.1553,1.2657,0.0,0.8835,0.0,100.0,Positive-to-Zero,validation,Persistence
+103,0.3953,0.4486,0.835,0.9903,0.0,16.5,Positive-to-Zero,validation,CatBoost
+960,0.3417,0.6724,0.7083,0.9552,15.21,13.96,All Rows,test,Persistence
+960,0.342,0.4845,0.7927,0.9771,17.71,3.02,All Rows,test,CatBoost
+680,0.0,0.0,1.0,1.0,0.0,0.0,Stable Demand,test,Persistence
+680,0.2143,0.2622,0.95,1.0,4.12,0.88,Stable Demand,test,CatBoost
+280,1.1714,1.245,0.0,0.8464,52.14,47.86,Any Change,test,Persistence
+280,0.6521,0.7987,0.4107,0.9214,50.71,8.21,Any Change,test,CatBoost
+146,1.1575,1.2247,0.0,0.8562,100.0,0.0,Increase,test,Persistence
+146,0.9345,1.0438,0.0342,0.8493,96.58,0.0,Increase,test,CatBoost
+134,1.1866,1.2667,0.0,0.8358,0.0,100.0,Decrease,test,Persistence
+134,0.3444,0.3819,0.8209,1.0,0.75,17.16,Decrease,test,CatBoost
+112,1.1161,1.1764,0.0,0.9018,100.0,0.0,Zero-to-Positive,test,Persistence
+112,0.8386,0.9306,0.0446,0.9018,95.54,0.0,Zero-to-Positive,test,CatBoost
+105,1.1524,1.2228,0.0,0.8667,0.0,100.0,Positive-to-Zero,test,Persistence
+105,0.393,0.4135,0.7905,1.0,0.0,20.95,Positive-to-Zero,test,CatBoost

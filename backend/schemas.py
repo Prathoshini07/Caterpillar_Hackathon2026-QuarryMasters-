@@ -111,3 +111,22 @@ class CheckOutRequest(BaseModel):
     idle_hrs_per_day: float
     fuel_usage_liters: float     # Total fuel consumed during rental
     operator_id: str
+
+
+# ──────────────────────────────────────────────
+# Demand Forecasting Schemas
+# ──────────────────────────────────────────────
+
+class WeeklyDemandBase(BaseModel):
+    week_start: date
+    site_id: str
+    equipment_type: str
+    weekly_demand: int
+
+class WeeklyDemandResponse(WeeklyDemandBase):
+    weekly_demand_id: int
+
+    class Config:
+        from_attributes = True
+        orm_mode = True
+

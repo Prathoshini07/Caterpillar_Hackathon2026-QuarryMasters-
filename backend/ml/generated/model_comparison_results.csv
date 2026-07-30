@@ -1,0 +1,19 @@
+model,feature_set,split,MAE,RMSE,exact_count_accuracy,within_one_unit_accuracy,demand_occurrence_accuracy,precision,recall,F1,underprediction_rate,overprediction_rate,mean_shortage_error,add_equip_precision,add_equip_recall,add_equip_f1
+Baseline A - Persistence,N/A,validation,0.3067,0.6377,0.7333,0.9667,0.7733,0.7419,0.7456,0.7437,13.33,13.33,0.1522,0.0,0.0,0.0
+Baseline A - Persistence,N/A,test,0.3417,0.6724,0.7083,0.9552,0.774,0.7488,0.7365,0.7426,15.21,13.96,0.176,0.0,0.0,0.0
+Baseline B - Rolling Mean 4,N/A,validation,0.4956,0.708,0.59,0.9533,0.6578,0.6254,0.5592,0.5904,23.78,17.22,0.2167,0.26,0.2167,0.2364
+Baseline B - Rolling Mean 4,N/A,test,0.5508,0.7675,0.551,0.9313,0.6531,0.6402,0.4941,0.5578,28.96,15.94,0.2448,0.1939,0.1301,0.1557
+Baseline C - Historical Mean,N/A,validation,0.6097,0.7304,0.4411,0.9744,0.5022,0.4585,0.7103,0.5573,18.89,37.0,0.3767,0.1976,0.55,0.2907
+Baseline C - Historical Mean,N/A,test,0.6464,0.7934,0.4396,0.9552,0.5302,0.4802,0.7412,0.5828,20.52,35.52,0.3729,0.2277,0.5411,0.3205
+Direct CatBoost (Base Features),Base Features,validation,0.3191,0.4675,0.8256,0.9789,0.8456,0.9743,0.6675,0.7922,16.56,0.89,0.1511,1.0,0.0083,0.0165
+Direct CatBoost (Base Features),Base Features,test,0.3423,0.4835,0.8052,0.975,0.8417,0.9756,0.6588,0.7865,18.75,0.73,0.1771,0.0,0.0,0.0
+Direct CatBoost (Enhanced Features),Enhanced Features,validation,0.3146,0.464,0.8211,0.98,0.8422,0.9264,0.6977,0.796,15.44,2.44,0.1467,0.6667,0.0833,0.1481
+Direct CatBoost (Enhanced Features),Enhanced Features,test,0.342,0.4845,0.7927,0.9771,0.8302,0.9119,0.6824,0.7806,17.71,3.02,0.176,0.5,0.0411,0.0759
+TwoStage CatBoost (Base Features),Base Features,validation,0.3212,0.4699,0.83,0.9788888888888889,0.85,0.9852,0.67,0.7976,16.22,1.33,0.1533,0.4286,0.025,0.0472
+TwoStage CatBoost (Base Features),Base Features,test,0.345,0.486,0.80625,0.975,0.8448,0.9759,0.6659,0.7916,18.23,1.35,0.176,0.5,0.0137,0.0267
+TwoStage CatBoost (Enhanced Features),Enhanced Features,validation,0.3169,0.4642,0.8288888888888889,0.9777777777777777,0.8478,0.9924,0.6599,0.7927,15.89,2.11,0.1511,0.5714,0.0333,0.063
+TwoStage CatBoost (Enhanced Features),Enhanced Features,test,0.3461,0.485,0.80625,0.975,0.8448,0.9929,0.6541,0.7887,17.6,3.23,0.1771,0.4444,0.0274,0.0516
+Multiclass CatBoost (Base Features),Base Features,validation,0.32,0.4715,0.8266666666666667,0.9788888888888889,0.8378,0.9466,0.67,0.7847,16.56,1.78,0.1533,0.0,0.0,0.0
+Multiclass CatBoost (Base Features),Base Features,test,0.35,0.4889,0.8020833333333334,0.975,0.8385,0.9355,0.6824,0.7891,17.81,2.08,0.174,1.0,0.0137,0.027
+Multiclass CatBoost (Enhanced Features),Enhanced Features,validation,0.3236,0.4698,0.8277777777777777,0.9788888888888889,0.8333,0.9103,0.6902,0.7851,15.89,3.11,0.1533,0.4286,0.025,0.0472
+Multiclass CatBoost (Enhanced Features),Enhanced Features,test,0.349,0.4872,0.8052083333333333,0.975,0.824,0.8879,0.6894,0.7762,17.5,4.06,0.176,0.5,0.0137,0.0267

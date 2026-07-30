@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Zap, Truck, AlertTriangle, Gauge, Calendar, RefreshCw, CheckCircle2, 
   Search, Filter, ShieldAlert, AlertCircle, ArrowUpRight, Phone, MapPin, 
-  Clock, Play, Pause, ChevronRight, X, Sparkles, Send, Lock, CalendarRange, Bell
+  Clock, Play, Pause, ChevronRight, X, Sparkles, Send, Lock, CalendarRange, Bell, TrendingUp
 } from 'lucide-react';
 import LiveEquipmentDetails from './LiveEquipmentDetails';
+import DemandForecastSection from './DemandForecastSection';
 
 export default function AssetDashboard({ activeTab, setActiveTab }) {
   const [stats, setStats] = useState(null);
@@ -303,6 +304,18 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
         >
           <Calendar className="w-4 h-4" />
           5. Datewise Return Schedule (3 Sections)
+        </button>
+
+        <button
+          onClick={() => setActiveTab('demand-forecast')}
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all ${
+            activeTab === 'demand-forecast'
+              ? 'bg-cat-yellow text-black shadow-lg shadow-cat-yellow/20'
+              : 'bg-cat-card text-cat-subtext hover:text-white border border-cat-border'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          7. Demand Forecast (CatBoost ML)
         </button>
       </div>
 
@@ -1330,6 +1343,9 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
 
       {/* TAB 6: EQUIPMENT DETAILS */}
       {activeTab === 'equipment-details' && <LiveEquipmentDetails />}
+
+      {/* TAB 7: DEMAND FORECAST (ML) */}
+      {activeTab === 'demand-forecast' && <DemandForecastSection />}
     </div>
   );
 }

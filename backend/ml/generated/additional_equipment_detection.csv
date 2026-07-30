@@ -1,0 +1,5 @@
+split,model,n_actual_positive,precision,recall,F1,TP,FP,FN,TN
+validation,Persistence,120,0.0,0.0,0.0,0,0,120,780
+validation,CatBoost,120,0.6667,0.0833,0.1481,10,5,110,775
+test,Persistence,146,0.0,0.0,0.0,0,0,146,814
+test,CatBoost,146,0.5,0.0411,0.0759,6,6,140,808

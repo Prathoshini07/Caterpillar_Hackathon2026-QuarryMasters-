@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, Date, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, Boolean, Date, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -12,6 +12,7 @@ class Site(Base):
     equipments = relationship("Equipment", back_populates="current_site")
     rental_logs = relationship("RentalLog", back_populates="site")
     demand_forecasts = relationship("DemandForecast", back_populates="site")
+    weekly_demands = relationship("WeeklyDemand", back_populates="site")
 
 
 class Operator(Base):
@@ -71,3 +72,20 @@ class DemandForecast(Base):
     forecast_date = Column(Date, nullable=False)
 
     site = relationship("Site", back_populates="demand_forecasts")
+
+
+class WeeklyDemand(Base):
+    __tablename__ = "weekly_demand"
+
+    weekly_demand_id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    week_start = Column(Date, nullable=False, index=True)
+    site_id = Column(String, ForeignKey("sites.site_id"), nullable=False, index=True)
+    equipment_type = Column(String, nullable=False, index=True)
+    weekly_demand = Column(Integer, nullable=False)
+
+    site = relationship("Site", back_populates="weekly_demands")
+
+    __table_args__ = (
+        UniqueConstraint("week_start", "site_id", "equipment_type", name="uix_weekly_demand_week_site_type"),
+    )
+
