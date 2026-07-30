@@ -107,8 +107,8 @@ class CheckInRequest(BaseModel):
 class CheckOutRequest(BaseModel):
     rental_id: str               # Generated at check-in — must match
     checkout_date: date
-    engine_hrs_per_day: float
-    idle_hrs_per_day: float
+    total_engine_hours: float    # Total engine ON hours for the entire rental period
+    total_idle_hours: float      # Total idle hours for the entire rental period
     fuel_usage_liters: float     # Total fuel consumed during rental
     operator_id: str
 

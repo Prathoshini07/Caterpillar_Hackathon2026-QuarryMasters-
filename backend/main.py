@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base, SessionLocal
-from models import Site, Operator, Equipment, RentalLog, DemandForecast, WeeklyDemand
-from routers import dashboard, portal, forecast
+from models import Site, Operator, Equipment, RentalLog, DemandForecast
+from routers import dashboard, portal
 from seed_data import generate_100_seeds
 from ml.prediction_service import prediction_service
 
@@ -24,7 +24,6 @@ app.add_middleware(
 # Register Routers
 app.include_router(dashboard.router)
 app.include_router(portal.router)
-app.include_router(forecast.router)
 
 @app.on_event("startup")
 def startup_db():
@@ -35,22 +34,21 @@ def startup_db():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        # SQLite migration: add new columns if they don't exist (only on SQLite engines)
-        if engine.dialect.name == "sqlite":
-            with engine.connect() as conn:
-                existing = [row[1] for row in conn.execute(
-                    __import__('sqlalchemy').text("PRAGMA table_info(rental_logs)")
-                ).fetchall()]
-                if "location" not in existing:
-                    conn.execute(__import__('sqlalchemy').text(
-                        "ALTER TABLE rental_logs ADD COLUMN location TEXT"
-                    ))
-                    conn.commit()
-                if "fuel_usage_liters" not in existing:
-                    conn.execute(__import__('sqlalchemy').text(
-                        "ALTER TABLE rental_logs ADD COLUMN fuel_usage_liters REAL"
-                    ))
-                    conn.commit()
+        # SQLite migration: add new columns if they don't exist
+        with engine.connect() as conn:
+            existing = [row[1] for row in conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(rental_logs)")
+            ).fetchall()]
+            if "location" not in existing:
+                conn.execute(__import__('sqlalchemy').text(
+                    "ALTER TABLE rental_logs ADD COLUMN location TEXT"
+                ))
+                conn.commit()
+            if "fuel_usage_liters" not in existing:
+                conn.execute(__import__('sqlalchemy').text(
+                    "ALTER TABLE rental_logs ADD COLUMN fuel_usage_liters REAL"
+                ))
+                conn.commit()
 
         # Check if DB needs legacy seeding (only when all core operational tables are completely empty)
         sites_count = db.query(Site).count()
