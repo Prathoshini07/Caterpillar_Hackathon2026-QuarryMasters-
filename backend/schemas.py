@@ -42,7 +42,7 @@ class RentalLogSchema(BaseModel):
     anomaly_flag: Optional[str] = None
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class ActionItemSchema(BaseModel):
     id: str
@@ -89,3 +89,25 @@ class DatewiseReturnItem(BaseModel):
     date: str
     total_returns: int
     items: List[dict]
+
+
+# ──────────────────────────────────────────────
+# User Portal Schemas  (single RentalLog table)
+# ──────────────────────────────────────────────
+
+class CheckInRequest(BaseModel):
+    equipment_id: str
+    equipment_type: str          # Excavator | Crane | Bulldozer | Grader
+    site_id: str
+    location: str                # Physical location of the site
+    check_in_date: date
+    expected_rental_days: int
+    operator_id: str
+
+class CheckOutRequest(BaseModel):
+    rental_id: str               # Generated at check-in — must match
+    checkout_date: date
+    engine_hrs_per_day: float
+    idle_hrs_per_day: float
+    fuel_usage_liters: float     # Total fuel consumed during rental
+    operator_id: str

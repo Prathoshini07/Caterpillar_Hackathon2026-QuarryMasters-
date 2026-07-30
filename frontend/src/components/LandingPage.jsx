@@ -1,7 +1,7 @@
 import React from 'react';
-import { ShieldAlert, Cpu, Truck, Activity, ArrowRight, CheckCircle2, Clock, BarChart3, Radio, Database } from 'lucide-react';
+import { ShieldAlert, Cpu, Truck, Activity, ArrowRight, CheckCircle2, Clock, BarChart3, Radio, Database, UserCircle2, History } from 'lucide-react';
 
-export default function LandingPage({ onEnterDashboard }) {
+export default function LandingPage({ onEnterDashboard, onOpenPortal, onOpenHistory }) {
   return (
     <div className="min-h-screen bg-cat-dark text-slate-100 flex flex-col relative overflow-hidden">
       {/* Background ambient lighting */}
@@ -25,11 +25,25 @@ export default function LandingPage({ onEnterDashboard }) {
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <div className="hidden md:flex items-center gap-2 text-xs text-cat-subtext bg-cat-steel px-3 py-1.5 rounded-lg border border-cat-border">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             PostgreSQL DB Synced (100 Rows/Table)
           </div>
+          <button
+            onClick={onOpenHistory}
+            className="border border-cat-yellow/40 hover:border-cat-yellow text-cat-yellow hover:bg-cat-yellow/10 font-bold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all transform hover:scale-[1.02]"
+          >
+            <History className="w-4 h-4" />
+            Rental History
+          </button>
+          <button
+            onClick={onOpenPortal}
+            className="border border-cat-yellow/40 hover:border-cat-yellow text-cat-yellow hover:bg-cat-yellow/10 font-bold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all transform hover:scale-[1.02]"
+          >
+            <UserCircle2 className="w-4 h-4" />
+            User Portal
+          </button>
           <button
             onClick={onEnterDashboard}
             className="bg-cat-yellow hover:bg-cat-yellowHover text-black font-bold px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all transform hover:scale-[1.02] shadow-lg shadow-cat-yellow/20"

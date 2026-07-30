@@ -53,6 +53,8 @@ class RentalLog(Base):
     rental_days = Column(Integer, nullable=False)
     is_overdue = Column(Boolean, default=False)
     anomaly_flag = Column(String, nullable=True)  # HIGH_IDLE, UNASSIGNED_USAGE, OVERDUE_BREACH, OPTIMAL
+    location = Column(String, nullable=True)            # Site location captured at check-in
+    fuel_usage_liters = Column(Float, nullable=True)    # Fuel consumed, captured at check-out
 
     equipment = relationship("Equipment", back_populates="rental_logs")
     site = relationship("Site", back_populates="rental_logs")

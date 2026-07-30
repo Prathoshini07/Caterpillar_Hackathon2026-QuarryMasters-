@@ -2,12 +2,16 @@ import React, { useState } from 'react';
 import LandingPage from './components/LandingPage';
 import Sidebar from './components/Sidebar';
 import AssetDashboard from './components/AssetDashboard';
+import UserPortal from './components/UserPortal';
+import HistoryPortal from './components/HistoryPortal';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing'); // 'landing' or 'dashboard'
   const [activeTab, setActiveTab] = useState('action-queue'); // 'action-queue', 'available', 'overdue-alerts', 'underutilized', 'datewise-returns'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isReseeding, setIsReseeding] = useState(false);
+  const [showPortal, setShowPortal] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const handleEnterDashboard = () => {
     setCurrentView('dashboard');
@@ -37,29 +41,41 @@ export default function App() {
     }
   };
 
-  if (currentView === 'landing') {
-    return <LandingPage onEnterDashboard={handleEnterDashboard} />;
-  }
-
   return (
-    <div className="min-h-screen bg-cat-dark text-slate-100 flex overflow-hidden">
-      {/* Side Navigation Bar */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        collapsed={sidebarCollapsed}
-        setCollapsed={setSidebarCollapsed}
-        onReseed={handleReseed}
-        isReseeding={isReseeding}
-      />
+    <>
+      {/* User Portal Modal — available from any view */}
+      {showPortal && <UserPortal onClose={() => setShowPortal(false)} />}
 
-      {/* Main Content View */}
-      <main className="flex-1 overflow-y-auto min-h-screen">
-        <AssetDashboard
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+      {/* History Modal */}
+      {showHistory && <HistoryPortal onClose={() => setShowHistory(false)} />}
+
+      {currentView === 'landing' ? (
+        <LandingPage
+          onEnterDashboard={handleEnterDashboard}
+          onOpenPortal={() => setShowPortal(true)}
+          onOpenHistory={() => setShowHistory(true)}
         />
-      </main>
-    </div>
+      ) : (
+        <div className="min-h-screen bg-cat-dark text-slate-100 flex overflow-hidden">
+          {/* Side Navigation Bar */}
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={handleTabChange}
+            collapsed={sidebarCollapsed}
+            setCollapsed={setSidebarCollapsed}
+            onReseed={handleReseed}
+            isReseeding={isReseeding}
+          />
+
+          {/* Main Content View */}
+          <main className="flex-1 overflow-y-auto min-h-screen">
+            <AssetDashboard
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+          </main>
+        </div>
+      )}
+    </>
   );
 }
