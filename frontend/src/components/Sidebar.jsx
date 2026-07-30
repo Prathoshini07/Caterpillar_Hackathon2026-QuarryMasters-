@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Zap, Truck, AlertTriangle, Gauge, Calendar, Database, RefreshCw, ChevronLeft, ChevronRight, Layers, Bell, Activity } from 'lucide-react';
+import { Home, Zap, Truck, AlertTriangle, Gauge, Calendar, Database, RefreshCw, ChevronLeft, ChevronRight, Layers, Bell, Activity, Coins } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollapsed, onReseed, isReseeding }) {
   const navItems = [
@@ -12,6 +12,7 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
     { id: 'datewise-returns', label: '5. Datewise Returns', icon: Calendar },
     { id: 'equipment-details', label: '6. Live Details', icon: Layers },
     { id: 'anomaly-detection', label: '7. Anomaly Detection', icon: Activity, badge: 'AI+Rules' },
+    { id: 'optimization', label: '8. Financial & Fleet Optimization', icon: Coins, badge: 'Cost' },
   ];
 
   return (

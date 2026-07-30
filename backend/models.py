@@ -33,6 +33,7 @@ class Equipment(Base):
     status = Column(String, nullable=False)  # RENTED, AVAILABLE, MAINTENANCE, UNDERUTILIZED
     current_site_id = Column(String, ForeignKey("sites.site_id"), nullable=True)
     assigned_operator_id = Column(String, ForeignKey("operators.operator_id"), nullable=True)
+    cumulative_engine_hours = Column(Float, default=0.0)  # Running total engine hours across all rentals
 
     current_site = relationship("Site", back_populates="equipments")
     assigned_operator = relationship("Operator", back_populates="assigned_equipments")
@@ -53,8 +54,11 @@ class RentalLog(Base):
     rental_days = Column(Integer, nullable=False)
     is_overdue = Column(Boolean, default=False)
     anomaly_flag = Column(String, nullable=True)  # HIGH_IDLE, UNASSIGNED_USAGE, OVERDUE_BREACH, OPTIMAL
-    location = Column(String, nullable=True)            # Site location captured at check-in
-    fuel_usage_liters = Column(Float, nullable=True)    # Fuel consumed, captured at check-out
+    location = Column(String, nullable=True)              # Site location captured at check-in
+    fuel_usage_liters = Column(Float, nullable=True)      # Fuel consumed, captured at check-out
+    total_engine_hours = Column(Float, nullable=True)     # Cached: engine_hrs/day × rental_days
+    accumulated_idle_penalty_usd = Column(Float, default=0.0)  # Excess idling penalty charged at checkout
+    last_serviced_engine_hours = Column(Float, default=0.0)    # Cumulative engine hours at last service
 
     equipment = relationship("Equipment", back_populates="rental_logs")
     site = relationship("Site", back_populates="rental_logs")
