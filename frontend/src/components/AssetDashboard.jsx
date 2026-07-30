@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Zap, Truck, AlertTriangle, Gauge, Calendar, RefreshCw, CheckCircle2, 
   Search, Filter, ShieldAlert, AlertCircle, ArrowUpRight, Phone, MapPin, 
-  Clock, Play, Pause, ChevronRight, X, Sparkles, Send, Lock, CalendarRange
+  Clock, Play, Pause, ChevronRight, X, Sparkles, Send, Lock, CalendarRange, Bell
 } from 'lucide-react';
 import LiveEquipmentDetails from './LiveEquipmentDetails';
 
@@ -13,6 +13,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
   const [overdueAlerts, setOverdueAlerts] = useState(null);
   const [underutilized, setUnderutilized] = useState(null);
   const [datewiseData, setDatewiseData] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
 
@@ -20,6 +21,12 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
   const [actionFilter, setActionFilter] = useState('ALL'); // ALL, HIGH, OVERDUE, UNDERUTILIZED
   const [equipSearch, setEquipSearch] = useState('');
   const [idleThresholdPct, setIdleThresholdPct] = useState(50.0);
+
+  // Notifications filters
+  const [notifCategoryFilter, setNotifCategoryFilter] = useState('OVERDUE'); // OVERDUE, TODAY, UPCOMING
+  const [notifLevelFilter, setNotifLevelFilter] = useState('ALL'); // ALL, 1, 2, 3, 4, 5
+  const [notifSearch, setNotifSearch] = useState('');
+  const [notifTodayOnly, setNotifTodayOnly] = useState(true); // satisfy user requirement by default
 
   // Datepicker filters for 3 Return Schedule sections
   const [overdueFromDate, setOverdueFromDate] = useState('');
@@ -42,13 +49,14 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, actionRes, availRes, alertRes, underRes, dateRes] = await Promise.all([
+      const [statsRes, actionRes, availRes, alertRes, underRes, dateRes, notifRes] = await Promise.all([
         fetch('/api/dashboard/stats'),
         fetch('/api/dashboard/action-queue'),
         fetch('/api/dashboard/available-equipment'),
         fetch('/api/dashboard/overdue-alerts'),
         fetch(`/api/dashboard/underutilized?threshold_pct=${idleThresholdPct}`),
-        fetch('/api/dashboard/datewise-returns')
+        fetch('/api/dashboard/datewise-returns'),
+        fetch('/api/dashboard/notifications')
       ]);
 
       const statsData = await statsRes.json();
@@ -57,6 +65,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
       const alertData = await alertRes.json();
       const underData = await underRes.json();
       const dateData = await dateRes.json();
+      const notifData = await notifRes.json();
 
       setStats(statsData);
       setActionQueue(actionData.actions || []);
@@ -64,6 +73,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
       setOverdueAlerts(alertData.levels || {});
       setUnderutilized(underData);
       setDatewiseData(dateData);
+      setNotifications(notifData.notifications || []);
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
       showNotification("Failed to connect to backend server. Make sure FastAPI is running on port 8000.", "error");
@@ -257,6 +267,18 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
         >
           <AlertTriangle className="w-4 h-4" />
           3. Overdue Alerts (5 Levels)
+        </button>
+
+        <button
+          onClick={() => setActiveTab('notifications-alerts')}
+          className={`px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all ${
+            activeTab === 'notifications-alerts'
+              ? 'bg-cat-yellow text-black shadow-lg shadow-cat-yellow/20'
+              : 'bg-cat-card text-cat-subtext hover:text-white border border-cat-border'
+          }`}
+        >
+          <Bell className="w-4 h-4" />
+          3.5. Notifications & Alerts ({notifications.filter(n => n.is_triggering_today).length} Today)
         </button>
 
         <button
@@ -956,6 +978,353 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
           </div>
           )}
 
+        </div>
+      )}
+
+      {/* TAB 3.5: UNIFIED NOTIFICATIONS & ALERTS PORTAL */}
+      {activeTab === 'notifications-alerts' && (
+        <div className="space-y-6 text-left">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-cat-card p-6 rounded-2xl border border-cat-border/80">
+            <div>
+              <div className="flex items-center gap-2.5 text-left">
+                <div className="bg-cat-yellow/20 p-2 rounded-xl text-cat-yellow shrink-0">
+                  <Bell className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-white flex items-center gap-2 tracking-tight">
+                    UNIFIED NOTIFICATIONS CENTER
+                  </h2>
+                  <p className="text-xs text-cat-subtext mt-1 leading-normal">
+                    Proactive return reminders and overdue escalations for Caterpillar asset rentals.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Timeframe toggle buttons satisfying 'only current day' requirement */}
+            <div className="flex bg-cat-steel p-1 rounded-xl border border-cat-border shrink-0">
+              <button
+                onClick={() => setNotifTodayOnly(true)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  notifTodayOnly 
+                    ? 'bg-cat-yellow text-black font-black shadow' 
+                    : 'text-cat-subtext hover:text-white'
+                }`}
+              >
+                Triggering Today Only
+              </button>
+              <button
+                onClick={() => setNotifTodayOnly(false)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  !notifTodayOnly 
+                    ? 'bg-cat-yellow text-black font-black shadow' 
+                    : 'text-cat-subtext hover:text-white'
+                }`}
+              >
+                All Active Alerts
+              </button>
+            </div>
+          </div>
+
+          {/* THREE KEY RETURN VIEWS (METRIC SELECTOR CARDS) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {/* Overdue Returns (5-Tier Matrix) */}
+            <button
+              onClick={() => {
+                setNotifCategoryFilter('OVERDUE');
+                setNotifLevelFilter('ALL');
+              }}
+              className={`bg-cat-card p-5 rounded-2xl border text-left transition-all duration-300 relative ${
+                notifCategoryFilter === 'OVERDUE'
+                  ? 'border-red-500 shadow-lg shadow-red-500/10 scale-[1.02]'
+                  : 'border-cat-border hover:border-red-500/50 hover:scale-[1.01]'
+              }`}
+            >
+              {notifCategoryFilter === 'OVERDUE' && (
+                <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+              )}
+              <span className="text-[10px] text-cat-subtext uppercase font-bold tracking-wider">View 1</span>
+              <h3 className="text-base font-black text-red-400 mt-1 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                Overdue Returns (5-Tier Matrix)
+              </h3>
+              <div className="text-3xl font-black text-white font-mono mt-3">
+                {notifications.filter(n => n.category === 'OVERDUE' && (!notifTodayOnly || n.is_triggering_today)).length}
+              </div>
+              <p className="text-[11px] text-cat-subtext mt-1.5 leading-relaxed">
+                Critical escalations for assets past checkout date (INFO to CRITICAL LOCK pipeline).
+              </p>
+            </button>
+
+            {/* Today's Due Returns */}
+            <button
+              onClick={() => {
+                setNotifCategoryFilter('TODAY');
+                setNotifLevelFilter('ALL');
+              }}
+              className={`bg-cat-card p-5 rounded-2xl border text-left transition-all duration-300 relative ${
+                notifCategoryFilter === 'TODAY'
+                  ? 'border-amber-500 shadow-lg shadow-amber-500/10 scale-[1.02]'
+                  : 'border-cat-border hover:border-amber-500/50 hover:scale-[1.01]'
+              }`}
+            >
+              {notifCategoryFilter === 'TODAY' && (
+                <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 rounded-full animate-ping" />
+              )}
+              <span className="text-[10px] text-cat-subtext uppercase font-bold tracking-wider">View 2</span>
+              <h3 className="text-base font-black text-amber-400 mt-1 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-500" />
+                Today's Due Returns
+              </h3>
+              <div className="text-3xl font-black text-white font-mono mt-3">
+                {notifications.filter(n => n.category === 'TODAY' && (!notifTodayOnly || n.is_triggering_today)).length}
+              </div>
+              <p className="text-[11px] text-cat-subtext mt-1.5 leading-relaxed">
+                Immediate priority check-outs scheduled for the current simulation date.
+              </p>
+            </button>
+
+            {/* Upcoming Returns (1-3 Days Ahead) */}
+            <button
+              onClick={() => {
+                setNotifCategoryFilter('UPCOMING');
+                setNotifLevelFilter('ALL');
+              }}
+              className={`bg-cat-card p-5 rounded-2xl border text-left transition-all duration-300 relative ${
+                notifCategoryFilter === 'UPCOMING'
+                  ? 'border-blue-500 shadow-lg shadow-blue-500/10 scale-[1.02]'
+                  : 'border-cat-border hover:border-blue-500/50 hover:scale-[1.01]'
+              }`}
+            >
+              {notifCategoryFilter === 'UPCOMING' && (
+                <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 rounded-full animate-ping" />
+              )}
+              <span className="text-[10px] text-cat-subtext uppercase font-bold tracking-wider">View 3</span>
+              <h3 className="text-base font-black text-blue-400 mt-1 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-400" />
+                Upcoming Returns (1–3 Days)
+              </h3>
+              <div className="text-3xl font-black text-white font-mono mt-3">
+                {notifications.filter(n => n.category === 'UPCOMING' && (!notifTodayOnly || n.is_triggering_today)).length}
+              </div>
+              <p className="text-[11px] text-cat-subtext mt-1.5 leading-relaxed">
+                Proactive customer notifications to plan checkout or extensions early.
+              </p>
+            </button>
+          </div>
+
+          {/* Filter and Search controls */}
+          <div className="bg-cat-card p-4 rounded-xl border border-cat-border flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+            {/* Filter by severity (only applies to Overdue Returns or Upcoming Returns) */}
+            <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-300">Active View:</span>
+                <span className={`text-xs font-black uppercase px-2.5 py-0.5 rounded ${
+                  notifCategoryFilter === 'OVERDUE' ? 'bg-red-500/10 text-red-400' :
+                  notifCategoryFilter === 'TODAY' ? 'bg-amber-500/10 text-amber-400' : 'bg-blue-500/10 text-blue-400'
+                }`}>
+                  {notifCategoryFilter === 'OVERDUE' ? 'Overdue Returns' :
+                   notifCategoryFilter === 'TODAY' ? "Today's Returns" : 'Upcoming (1-3 Days)'}
+                </span>
+              </div>
+
+              {notifCategoryFilter === 'OVERDUE' && (
+                <div className="flex items-center gap-2 border-l border-cat-border pl-4">
+                  <span className="text-[10px] text-cat-subtext uppercase font-bold">Severity Matrix:</span>
+                  <div className="flex bg-cat-steel p-0.5 rounded-lg border border-cat-border/60">
+                    {['ALL', '1', '2', '3', '4', '5'].map(lvl => (
+                      <button
+                        key={lvl}
+                        onClick={() => setNotifLevelFilter(lvl)}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                          notifLevelFilter === lvl
+                            ? 'bg-cat-yellow text-black font-black shadow'
+                            : 'text-cat-subtext hover:text-white'
+                        }`}
+                      >
+                        {lvl === 'ALL' ? 'All' : `L${lvl}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {notifCategoryFilter === 'UPCOMING' && (
+                <div className="flex items-center gap-2 border-l border-cat-border pl-4">
+                  <span className="text-[10px] text-cat-subtext uppercase font-bold">Timeframe:</span>
+                  <div className="flex bg-cat-steel p-0.5 rounded-lg border border-cat-border/60">
+                    {['ALL', '1', '2', '3'].map(day => (
+                      <button
+                        key={day}
+                        onClick={() => setNotifLevelFilter(day)}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all ${
+                          notifLevelFilter === day
+                            ? 'bg-cat-yellow text-black font-black shadow'
+                            : 'text-cat-subtext hover:text-white'
+                        }`}
+                      >
+                        {day === 'ALL' ? 'All' : `${day} Day(s) Out`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Search Box */}
+            <div className="relative w-full md:w-72">
+              <Search className="w-4 h-4 text-cat-subtext absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search Equipment ID or Site..."
+                value={notifSearch}
+                onChange={(e) => setNotifSearch(e.target.value)}
+                className="bg-cat-steel border border-cat-border text-white text-xs pl-9 pr-4 py-2.5 rounded-xl w-full focus:border-cat-yellow outline-none transition-all placeholder:text-cat-subtext font-medium"
+              />
+              {notifSearch && (
+                <button 
+                  onClick={() => setNotifSearch('')} 
+                  className="absolute right-3 top-2.5 text-xs text-cat-subtext hover:text-white"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* List of filtered cards */}
+          <div className="space-y-4">
+            {notifications
+              .filter(n => {
+                if (notifTodayOnly && !n.is_triggering_today) return false;
+                if (n.category !== notifCategoryFilter) return false;
+                if (notifLevelFilter !== 'ALL') {
+                  if (notifCategoryFilter === 'OVERDUE' && n.level.toString() !== notifLevelFilter) return false;
+                  if (notifCategoryFilter === 'UPCOMING' && n.days_diff.toString() !== notifLevelFilter) return false;
+                }
+                if (notifSearch) {
+                  const q = notifSearch.toLowerCase();
+                  return n.equipment_id.toLowerCase().includes(q) || n.site_name.toLowerCase().includes(q) || n.type.toLowerCase().includes(q);
+                }
+                return true;
+              }).length === 0 ? (
+              <div className="bg-cat-card/50 p-12 rounded-2xl border border-cat-border text-center space-y-3">
+                <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
+                <h3 className="text-white font-bold">All Systems Nominal</h3>
+                <p className="text-xs text-cat-subtext max-w-sm mx-auto">
+                  No return alerts pending under the selected view filter.
+                </p>
+              </div>
+            ) : (
+              notifications
+                .filter(n => {
+                  if (notifTodayOnly && !n.is_triggering_today) return false;
+                  if (n.category !== notifCategoryFilter) return false;
+                  if (notifLevelFilter !== 'ALL') {
+                    if (notifCategoryFilter === 'OVERDUE' && n.level.toString() !== notifLevelFilter) return false;
+                    if (notifCategoryFilter === 'UPCOMING' && n.days_diff.toString() !== notifLevelFilter) return false;
+                  }
+                  if (notifSearch) {
+                    const q = notifSearch.toLowerCase();
+                    return n.equipment_id.toLowerCase().includes(q) || n.site_name.toLowerCase().includes(q) || n.type.toLowerCase().includes(q);
+                  }
+                  return true;
+                })
+                .map((n) => {
+                  const isCritical = n.category === 'OVERDUE' && n.level >= 4;
+                  return (
+                    <div 
+                      key={n.id}
+                      className="bg-cat-card p-5 rounded-2xl border flex flex-col md:flex-row gap-5 justify-between items-start md:items-center transition-all duration-300 relative overflow-hidden text-left"
+                      style={{ 
+                        borderColor: n.color + '40',
+                        boxShadow: isCritical ? `0 0 15px ${n.color}15` : 'none'
+                      }}
+                    >
+                      {/* Left color bar */}
+                      <div 
+                        className="absolute left-0 top-0 bottom-0 w-1.5"
+                        style={{ backgroundColor: n.color }}
+                      />
+
+                      <div className="flex gap-4 items-start w-full">
+                        <div 
+                          className="p-3 rounded-xl shrink-0 mt-0.5 animate-pulse"
+                          style={{ backgroundColor: n.color + '15', color: n.color }}
+                        >
+                          {n.category === 'OVERDUE' ? (
+                            <AlertTriangle className="w-6 h-6" />
+                          ) : (
+                            <Clock className="w-6 h-6" />
+                          )}
+                        </div>
+
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <span 
+                              className="text-[10px] font-black px-2 py-0.5 rounded tracking-wider"
+                              style={{ backgroundColor: n.color + '20', color: n.color }}
+                            >
+                              {n.badge}
+                            </span>
+                            <span 
+                              className={`text-[10px] font-black px-2 py-0.5 rounded tracking-wider border ${
+                                n.category === 'OVERDUE' 
+                                  ? 'bg-red-500/10 text-red-400 border-red-500/20' 
+                                  : (n.category === 'TODAY' 
+                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                    : 'bg-blue-500/10 text-blue-400 border-blue-500/20')
+                              }`}
+                            >
+                              {n.category === 'OVERDUE' ? 'Overdue Return' :
+                               n.category === 'TODAY' ? "Today's Return" : 'Upcoming Return'}
+                            </span>
+                            {n.is_triggering_today && (
+                              <span className="bg-cat-yellow text-black text-[9px] font-extrabold px-1.5 py-0.5 rounded">
+                                TRIGGERING TODAY
+                              </span>
+                            )}
+                          </div>
+
+                          <h4 className="text-white font-extrabold text-sm md:text-base flex items-center gap-2 truncate">
+                            {n.title}
+                          </h4>
+                          <p className="text-xs text-slate-300">
+                            {n.description}
+                          </p>
+
+                          {/* Grid Details */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-cat-dark p-3 rounded-xl border border-cat-border/60 text-[11px] mt-2.5">
+                            <div>
+                              <span className="text-cat-subtext block uppercase tracking-wider text-[9px]">Equipment ID</span>
+                              <span className="font-mono text-cat-yellow font-bold">{n.equipment_id} ({n.type})</span>
+                            </div>
+                            <div>
+                              <span className="text-cat-subtext block uppercase tracking-wider text-[9px]">Work Site</span>
+                              <span className="text-slate-200 font-semibold truncate block">{n.site_name}</span>
+                            </div>
+                            <div>
+                              <span className="text-cat-subtext block uppercase tracking-wider text-[9px]">Operator Contact</span>
+                              <span className="text-slate-200 font-semibold block">{n.operator_name}</span>
+                              <span className="text-cat-subtext font-mono text-[9px]">{n.operator_contact}</span>
+                            </div>
+                            <div>
+                              <span className="text-cat-subtext block uppercase tracking-wider text-[9px]">
+                                {n.category === 'OVERDUE' ? 'Days Overdue' : 'Days Remaining'}
+                              </span>
+                              <span className="text-white font-black font-mono">
+                                {n.category === 'OVERDUE' ? `+${n.days_diff} days late` : 
+                                 (n.category === 'TODAY' ? 'Due today' : `${n.days_diff} days left`)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
         </div>
       )}
 

@@ -417,6 +417,153 @@ def get_datewise_returns(db: Session = Depends(get_db)):
     }
 
 
+@router.get("/notifications")
+def get_notifications(db: Session = Depends(get_db)):
+    """
+    Generate notifications organized into three key return views:
+    1. Overdue Returns (5-Tier Matrix): days_overdue > 0, critical escalations (INFO -> CRITICAL LOCK).
+    2. Today's Due Returns: days_remaining == 0, immediate priority check-outs.
+    3. Upcoming Returns (1-3 Days Ahead): 1 <= days_remaining <= 3, proactive reminders to plan early.
+    """
+    logs = db.query(RentalLog).all()
+    notifications = []
+    
+    levels_config = {
+        1: {"name": "Level 1: Gentle Reminder", "color": "#3B82F6", "badge": "INFO", "action": "Send SMS/Email reminder to operator for return confirmation."},
+        2: {"name": "Level 2: Caution Notice", "color": "#EAB308", "badge": "WARNING", "action": "Notify site manager of potential rental extension charges."},
+        3: {"name": "Level 3: Escalated Surcharge", "color": "#F97316", "badge": "ESCALATED", "action": "Apply $250/day late penalty fee and dispatch field supervisor."},
+        4: {"name": "Level 4: High Risk Penalty", "color": "#EF4444", "badge": "HIGH RISK", "action": "Issue formal contract default notice and pause further equipment leases."},
+        5: {"name": "Level 5: Critical Contract Breach", "color": "#A855F7", "badge": "CRITICAL LOCK", "action": "TRIGGER REMOTE TELEMATICS ENGINE LOCK & DISPATCH RECOVERY TOW."}
+    }
+    
+    for log in logs:
+        eq = db.query(Equipment).filter(Equipment.equipment_id == log.equipment_id).first()
+        site = db.query(Site).filter(Site.site_id == log.site_id).first() if log.site_id else None
+        op = db.query(Operator).filter(Operator.operator_id == log.operator_id).first() if log.operator_id else None
+        
+        days_overdue = (SIMULATED_TODAY - log.check_out_date).days
+        days_remaining = (log.check_out_date - SIMULATED_TODAY).days
+        
+        site_name = site.site_name if site else "N/A"
+        location = site.location if site else "N/A"
+        op_name = op.name if op else "Unassigned"
+        op_contact = op.contact_info if op else "N/A"
+        
+        # Section 1: Overdue Returns (5-Tier Matrix)
+        if days_overdue > 0:
+            if days_overdue <= 1:
+                level = 1
+            elif days_overdue <= 3:
+                level = 2
+            elif days_overdue <= 6:
+                level = 3
+            elif days_overdue <= 10:
+                level = 4
+            else:
+                level = 5
+                
+            config = levels_config[level]
+            
+            # Check if this alert triggered exactly today
+            is_triggering_today = (
+                (level == 1 and days_overdue == 1) or
+                (level == 2 and days_overdue == 2) or
+                (level == 3 and days_overdue == 4) or
+                (level == 4 and days_overdue == 7) or
+                (level == 5 and days_overdue == 11)
+            )
+            
+            notifications.append({
+                "id": f"NOTIF-OVD-{log.rental_id}",
+                "equipment_id": log.equipment_id,
+                "type": eq.type if eq else "Equipment",
+                "site_name": site_name,
+                "location": location,
+                "operator_name": op_name,
+                "operator_contact": op_contact,
+                "check_out_date": str(log.check_out_date),
+                "category": "OVERDUE",
+                "level": level,
+                "title": config["name"],
+                "description": f"Equipment {log.equipment_id} ({eq.type if eq else 'Machinery'}) is {days_overdue} day(s) overdue at {site_name}.",
+                "recommended_action": config["action"],
+                "badge": config["badge"],
+                "color": config["color"],
+                "days_diff": days_overdue,
+                "is_triggering_today": is_triggering_today
+            })
+            
+        # Section 2: Today's Due Returns
+        elif days_remaining == 0:
+            # Due today is immediate action (Level 5)
+            notifications.append({
+                "id": f"NOTIF-TODAY-{log.rental_id}",
+                "equipment_id": log.equipment_id,
+                "type": eq.type if eq else "Equipment",
+                "site_name": site_name,
+                "location": location,
+                "operator_name": op_name,
+                "operator_contact": op_contact,
+                "check_out_date": str(log.check_out_date),
+                "category": "TODAY",
+                "level": 5,
+                "title": "Today's Due Returns",
+                "description": f"Equipment {log.equipment_id} ({eq.type if eq else 'Machinery'}) is scheduled for immediate check-out return today.",
+                "recommended_action": "Immediate priority check-outs scheduled for the current date. Confirm gate pass & coordinate return driver.",
+                "badge": "DUE TODAY",
+                "color": "#EAB308", # Gold for warning
+                "days_diff": 0,
+                "is_triggering_today": True
+            })
+            
+        # Section 3: Upcoming Returns (1-3 Days Ahead)
+        elif 1 <= days_remaining <= 3:
+            # Proactive reminders
+            if days_remaining == 3:
+                level = 1
+                badge = "UPCOMING INFO"
+                color = "#3B82F6"
+                title = "Upcoming Return (3 Days Ahead)"
+            elif days_remaining == 2:
+                level = 2
+                badge = "UPCOMING WARNING"
+                color = "#EAB308"
+                title = "Upcoming Return (2 Days Ahead)"
+            else: # days_remaining == 1
+                level = 3
+                badge = "DUE TOMORROW"
+                color = "#F97316"
+                title = "Upcoming Return (Due Tomorrow)"
+                
+            notifications.append({
+                "id": f"NOTIF-UPC-{log.rental_id}",
+                "equipment_id": log.equipment_id,
+                "type": eq.type if eq else "Equipment",
+                "site_name": site_name,
+                "location": location,
+                "operator_name": op_name,
+                "operator_contact": op_contact,
+                "check_out_date": str(log.check_out_date),
+                "category": "UPCOMING",
+                "level": level,
+                "title": title,
+                "description": f"Equipment {log.equipment_id} ({eq.type if eq else 'Machinery'}) is due for return in {days_remaining} day(s) at {site_name}.",
+                "recommended_action": "Proactive reminder: Sent to customer so they can plan check-out/extensions early.",
+                "badge": badge,
+                "color": color,
+                "days_diff": days_remaining,
+                "is_triggering_today": True
+            })
+            
+    # Sort notifications by level (highest first), then by category, then by days_diff
+    notifications.sort(key=lambda x: (-x["level"], x["category"] == "OVERDUE", x["days_diff"]))
+    return {
+        "simulation_date": str(SIMULATED_TODAY),
+        "total_notifications": len(notifications),
+        "notifications": notifications
+    }
+
+
 @router.post("/reseed")
 def reseed_database(db: Session = Depends(get_db)):
     generate_100_seeds(db)

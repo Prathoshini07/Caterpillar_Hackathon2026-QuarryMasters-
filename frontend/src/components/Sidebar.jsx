@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Zap, Truck, AlertTriangle, Gauge, Calendar, Database, RefreshCw, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
+import { Home, Zap, Truck, AlertTriangle, Gauge, Calendar, Database, RefreshCw, ChevronLeft, ChevronRight, Layers, Bell } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollapsed, onReseed, isReseeding }) {
   const navItems = [
@@ -7,6 +7,7 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
     { id: 'action-queue', label: '1. Action Queue', icon: Zap, highlight: true },
     { id: 'available', label: '2. Available Fleet', icon: Truck },
     { id: 'overdue-alerts', label: '3. Overdue 5-Level Alerts', icon: AlertTriangle, badge: '5 Severities' },
+    { id: 'notifications-alerts', label: '3.5. Notifications & Alerts', icon: Bell, badge: 'Today' },
     { id: 'underutilized', label: '4. Underutilized Assets', icon: Gauge },
     { id: 'datewise-returns', label: '5. Datewise Returns', icon: Calendar },
     { id: 'equipment-details', label: '6. Live Details', icon: Layers },

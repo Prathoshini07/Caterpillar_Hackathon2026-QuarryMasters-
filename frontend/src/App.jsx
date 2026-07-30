@@ -7,7 +7,7 @@ import HistoryPortal from './components/HistoryPortal';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing'); // 'landing' or 'dashboard'
-  const [activeTab, setActiveTab] = useState('action-queue'); // 'action-queue', 'available', 'overdue-alerts', 'underutilized', 'datewise-returns'
+  const [activeTab, setActiveTab] = useState('action-queue'); // 'action-queue', 'available', 'overdue-alerts', 'notifications-alerts', 'underutilized', 'datewise-returns'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isReseeding, setIsReseeding] = useState(false);
   const [showPortal, setShowPortal] = useState(false);
