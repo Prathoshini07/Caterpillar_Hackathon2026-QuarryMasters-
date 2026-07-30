@@ -163,7 +163,7 @@ export default function LiveEquipmentDetails() {
                     {eq.live_status === 'Available' ? (
                       <span className="text-slate-500 text-xs">-</span>
                     ) : (
-                      <span className={`font-mono text-xs font-bold ${eq.idle_ratio > 75 ? 'text-red-400' : eq.idle_ratio >= 50 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      <span className={`font-mono text-xs font-bold ${eq.idle_ratio > 75 ? 'text-red-400' : eq.idle_ratio > 50 ? 'text-amber-400' : 'text-emerald-400'}`}>
                         {eq.idle_ratio}%
                       </span>
                     )}

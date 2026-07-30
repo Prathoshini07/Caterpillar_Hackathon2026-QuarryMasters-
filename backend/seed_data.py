@@ -34,13 +34,13 @@ def generate_100_seeds(db: Session):
     # Base exact dataset rows from prompt Image 1 & 2
     # Formula: Idle Efficiency Ratio % = idle_hr / (engine_hr + idle_hr) * 100%
     base_exact_equipment = [
-        ("EQX1001", "Excavator", "RENTED", "S003", "OP101", "2025-04-01", "2025-04-16", 1.5, 10.0, 15), # 10 / (1.5+10) = 86.9% (>50%)
-        ("EQX1002", "Crane", "AVAILABLE", None, None, "2025-03-10", "2025-03-30", 0.0, 11.0, 20),      # 11 / (0+11) = 100% (>50%)
-        ("EQX1003", "Bulldozer", "RENTED", "S002", "OP203", "2025-02-15", "2025-03-11", 7.5, 0.5, 25),   # 0.5 / (7.5+0.5) = 6.25% (Optimal)
-        ("EQX1004", "Excavator", "RENTED", "S004", "OP106", "2025-05-05", "2025-05-15", 2.0, 9.0, 10),  # 9 / (2+9) = 81.8% (>50%)
+        ("EQX1001", "Excavator", "RENTED", "S003", "OP101", "2025-04-01", "2025-04-16", 11.5, 10.0, 15), # 10 / (11.5+10) = 46.5% / idle < eng
+        ("EQX1002", "Crane", "AVAILABLE", None, None, "2025-03-10", "2025-03-30", 0.0, 0.0, 20),      
+        ("EQX1003", "Bulldozer", "RENTED", "S002", "OP203", "2025-02-15", "2025-03-11", 8.0, 0.5, 25),   # 0.5 / (8+0.5) = 5.8% (Optimal)
+        ("EQX1004", "Excavator", "RENTED", "S004", "OP106", "2025-05-05", "2025-05-15", 11.0, 9.0, 10),  # 9 / (11+9) = 45% / idle < eng
         ("EQX1005", "Bulldozer", "RENTED", "S005", "OP301", "2025-01-01", "2025-01-31", 8.0, 0.0, 30),   # 0 / (8+0) = 0% (Optimal)
-        ("EQX1006", "Grader", "RENTED", "S001", "OP114", "2025-04-05", "2025-04-23", 3.0, 6.0, 18),     # 6 / (3+6) = 66.7% (>50%)
-        ("EQX1007", "Excavator", "AVAILABLE", None, None, "2025-03-20", "2025-04-01", 0.0, 12.0, 12),  # 12 / (0+12) = 100% (>50%)
+        ("EQX1006", "Grader", "RENTED", "S001", "OP114", "2025-04-05", "2025-04-23", 9.0, 6.0, 18),     # 6 / (9+6) = 40% / idle < eng
+        ("EQX1007", "Excavator", "AVAILABLE", None, None, "2025-03-20", "2025-04-01", 0.0, 0.0, 12),  
     ]
 
     today = datetime.date(2026, 7, 30)
@@ -128,19 +128,18 @@ def generate_100_seeds(db: Session):
             check_in = check_out - datetime.timedelta(days=rental_days)
 
             if scenario == "UNDERUTILIZED":
-                eng = round(random.uniform(0.5, 2.5), 1)
-                idle = round(random.uniform(7.0, 11.5), 1) # Ratio = idle / (eng+idle) * 100 > 75%
+                eng = round(random.uniform(8.0, 14.0), 1)
+                idle = round(random.uniform(eng * 0.55, min(eng - 0.5, 12.0)), 1) # idle/eng >= 55% & idle < eng
                 anomaly = "HIGH_IDLE_RATIO"
             else:
-                eng = round(random.uniform(5.0, 9.0), 1)
-                idle = round(random.uniform(0.5, 3.0), 1)  # Ratio < 35%
+                eng = round(random.uniform(6.0, 12.0), 1)
+                idle = round(random.uniform(0.5, min(eng * 0.3, 3.0)), 1)  # idle/eng < 30% & idle < eng
                 anomaly = "OVERDUE_BREACH" if is_overdue else "OPTIMAL"
 
         eq = Equipment(equipment_id=eq_id, type=eq_type, status=status, current_site_id=site_fk, assigned_operator_id=op_fk)
         equipments.append(eq)
 
-        tot = eng + idle
-        idle_ratio = (idle / tot * 100.0) if tot > 0 else 0.0
+        idle_ratio = (idle / eng * 100.0) if eng > 0 else 0.0
 
         r_log = RentalLog(
             rental_id=f"RNT{1000+i}",

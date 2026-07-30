@@ -563,10 +563,10 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
               </div>
             </div>
 
-            {/* Underutilized Table */}
-            <div className="overflow-x-auto rounded-xl border border-cat-border">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-cat-steel text-cat-subtext uppercase font-bold text-[10px] tracking-wider">
+            {/* Underutilized Table with Fixed-Height Scroll Container */}
+            <div className="overflow-x-auto max-h-[60vh] overflow-y-auto rounded-xl border border-cat-border shadow-xl">
+              <table className="w-full text-left text-xs whitespace-nowrap">
+                <thead className="bg-cat-steel text-cat-subtext uppercase font-bold text-[10px] tracking-wider sticky top-0 z-10 backdrop-blur-md">
                   <tr>
                     <th className="p-3">Equipment ID</th>
                     <th className="p-3">Type</th>
@@ -575,44 +575,52 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
                     <th className="p-3">Idle Hours</th>
                     <th className="p-3">Productive Hours</th>
                     <th className="p-3">Idle Efficiency Ratio %</th>
-                    <th className="p-3">Anomaly Flag</th>
+                    <th className="p-3">Status Flag</th>
                     <th className="p-3">Recommended Decision</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-cat-border bg-cat-card">
-                  {underutilized.equipments.map((item) => (
-                    <tr 
-                      key={item.rental_id}
-                      className={`hover:bg-cat-cardHover transition-colors ${
-                        item.is_underutilized ? 'bg-amber-500/5' : ''
-                      }`}
-                    >
-                      <td className="p-3 font-mono font-bold text-cat-yellow">{item.equipment_id}</td>
-                      <td className="p-3 font-semibold text-white">{item.type}</td>
-                      <td className="p-3 text-slate-300">{item.site_name}</td>
-                      <td className="p-3 font-mono text-emerald-400 font-bold">{item.engine_hours} hrs</td>
-                      <td className="p-3 font-mono text-red-400 font-bold">{item.idle_hours} hrs</td>
-                      <td className="p-3 font-mono text-slate-200">{item.productive_hours} hrs</td>
-                      <td className="p-3 font-mono font-black">
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 bg-cat-dark h-2 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full ${item.idle_efficiency_ratio > 70 ? 'bg-red-500' : 'bg-amber-500'}`} 
-                              style={{ width: `${Math.min(100, item.idle_efficiency_ratio)}%` }}
-                            />
+                  {underutilized.equipments.map((item) => {
+                    const rawFlag = (item.severity_flag || item.anomaly_flag || '').toUpperCase();
+                    const isOverdue = rawFlag.includes('OVERDUE');
+                    const isIdle = rawFlag.includes('IDLE') || rawFlag === 'HIGH' || rawFlag === 'MED' || item.idle_efficiency_ratio > 50;
+                    const flagText = isOverdue ? 'OVERDUE' : (isIdle ? 'IDLE' : 'OPTIMAL');
+
+                    return (
+                      <tr 
+                        key={item.rental_id}
+                        className={`hover:bg-cat-cardHover transition-colors ${
+                          isOverdue ? 'bg-purple-500/5' : isIdle ? 'bg-amber-500/5' : ''
+                        }`}
+                      >
+                        <td className="p-3 font-mono font-bold text-cat-yellow">{item.equipment_id}</td>
+                        <td className="p-3 font-semibold text-white">{item.type}</td>
+                        <td className="p-3 text-slate-300">{item.site_name}</td>
+                        <td className="p-3 font-mono text-emerald-400 font-bold">{item.engine_hours} hrs</td>
+                        <td className="p-3 font-mono text-red-400 font-bold">{item.idle_hours} hrs</td>
+                        <td className="p-3 font-mono text-slate-200">{item.productive_hours} hrs</td>
+                        <td className="p-3 font-mono font-black">
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-cat-dark h-2 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full ${item.idle_efficiency_ratio > 75 ? 'bg-red-500' : item.idle_efficiency_ratio > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+                                style={{ width: `${Math.min(100, item.idle_efficiency_ratio)}%` }}
+                              />
+                            </div>
+                            <span className={item.idle_efficiency_ratio > 75 ? 'text-red-400 font-bold' : item.idle_efficiency_ratio > 50 ? 'text-amber-400 font-bold' : 'text-emerald-400'}>
+                              {item.idle_efficiency_ratio}%
+                            </span>
                           </div>
-                          <span className={item.idle_efficiency_ratio > 50 ? 'text-red-400 font-bold' : 'text-emerald-400'}>
-                            {item.idle_efficiency_ratio}%
+                        </td>
+                        <td className="p-3">
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${
+                            flagText === 'OVERDUE' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' :
+                            flagText === 'IDLE' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                            'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          }`}>
+                            {flagText}
                           </span>
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                          item.is_underutilized ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400'
-                        }`}>
-                          {item.anomaly_flag}
-                        </span>
-                      </td>
+                        </td>
                       <td className="p-3 text-slate-300 font-medium">
                         <div className="flex items-center justify-between gap-2">
                           <span className="truncate max-w-xs">{item.recommendation}</span>
@@ -624,8 +632,8 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
                           </button>
                         </div>
                       </td>
-                    </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

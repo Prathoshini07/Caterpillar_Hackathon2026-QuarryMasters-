@@ -156,12 +156,14 @@ def checkout_equipment(payload: CheckOutRequest, db: Session = Depends(get_db)):
     else:
         anomaly_flag = "OPTIMAL"
 
-    total_engine_hours = round(payload.engine_hrs_per_day * actual_days, 1)
-    total_idle_hours = round(payload.idle_hrs_per_day * actual_days, 1)
-    total_runtime_hours = round((payload.engine_hrs_per_day - payload.idle_hrs_per_day) * actual_days, 1)
-    downtime_per_day = round(24.0 - payload.engine_hrs_per_day, 1)
-    total_downtime_hours = round(downtime_per_day * actual_days, 1)
-    utilization_pct = round(((payload.engine_hrs_per_day - payload.idle_hrs_per_day) / 24.0) * 100.0, 1)
+    eng = payload.engine_hrs_per_day
+    idle = payload.idle_hrs_per_day
+    total_runtime_hours = round(eng, 1)
+    total_idle_hours = round(idle, 1)
+    total_engine_hours = round(eng, 1)
+    downtime_per_day = max(0.0, round(24.0 - eng, 1))
+    total_downtime_hours = downtime_per_day
+    utilization_pct = round((eng / 24.0) * 100.0, 1)
 
     # 5. Update the RentalLog row
     log.check_out_date = payload.checkout_date
@@ -231,11 +233,16 @@ def get_rental_history(db: Session = Depends(get_db)):
         op = db.query(Operator).filter(Operator.operator_id == log.operator_id).first()
         
         actual_days = log.rental_days if log.rental_days else 1
-        total_engine = round((log.engine_hours_per_day or 0) * actual_days, 1)
-        total_idle = round((log.idle_hours_per_day or 0) * actual_days, 1)
-        total_runtime = round(total_engine - total_idle, 1)
-        downtime_per_day = round(24.0 - (log.engine_hours_per_day or 0), 1)
-        total_downtime = round(downtime_per_day * actual_days, 1)
+        eng = log.engine_hours_per_day or 0.0
+        idle = log.idle_hours_per_day or 0.0
+        
+        # Per-day average values (strictly <= 24.0 hrs/day):
+        # eng = average engine runtime hrs/day (<= 24)
+        # idle = average idle hrs/day (<= eng)
+        # downtime = 24.0 - eng (<= 24)
+        runtime_per_day = round(eng, 1)
+        idle_per_day = round(idle, 1)
+        downtime_per_day = max(0.0, round(24.0 - eng, 1))
         
         result.append({
             "rental_id": log.rental_id,
@@ -249,12 +256,12 @@ def get_rental_history(db: Session = Depends(get_db)):
             "check_in_date": str(log.check_in_date),
             "check_out_date": str(log.check_out_date),
             "rental_days": actual_days,
-            "engine_hrs_per_day": log.engine_hours_per_day or 0,
-            "idle_hrs_per_day": log.idle_hours_per_day or 0,
-            "total_engine_hrs": total_engine,
-            "total_idle_hrs": total_idle,
-            "total_runtime_hrs": total_runtime,
-            "total_downtime_hrs": total_downtime,
+            "engine_hrs_per_day": runtime_per_day,
+            "idle_hrs_per_day": idle_per_day,
+            "total_engine_hrs": runtime_per_day,
+            "total_idle_hrs": idle_per_day,
+            "total_runtime_hrs": runtime_per_day,
+            "total_downtime_hrs": downtime_per_day,
             "fuel_usage_liters": log.fuel_usage_liters or 0,
             "anomaly_flag": log.anomaly_flag or "N/A",
             "is_overdue": log.is_overdue

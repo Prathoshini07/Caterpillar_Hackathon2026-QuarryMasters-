@@ -20,12 +20,11 @@ def compute_live_status(eq, log, today=SIMULATED_TODAY):
     elif days_diff == 0:
         return "Returning Today"
         
-    eng = log.engine_hours_per_day or 0.0
-    idle = log.idle_hours_per_day or 0.0
-    tot = eng + idle
-    idle_ratio = (idle / tot * 100.0) if tot > 0 else 0.0
+    eng = min(24.0, max(0.0, log.engine_hours_per_day or 0.0))
+    idle = min(eng, max(0.0, log.idle_hours_per_day or 0.0))
+    idle_ratio = (idle / eng * 100.0) if eng > 0 else 0.0
     
-    if idle_ratio >= 50.0:
+    if idle_ratio > 50.0:
         return "Idle"
         
     return "In Use"
@@ -55,8 +54,10 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
     valid_count = 0
 
     for log in all_logs:
-        if log.engine_hours_per_day > 0:
-            idle_ratio = (log.idle_hours_per_day / (log.engine_hours_per_day + log.idle_hours_per_day)) * 100.0
+        eng = min(24.0, max(0.0, log.engine_hours_per_day or 0.0))
+        idle = min(eng, max(0.0, log.idle_hours_per_day or 0.0))
+        if eng > 0:
+            idle_ratio = (idle / eng) * 100.0
             total_idle_ratio += idle_ratio
             valid_count += 1
 
@@ -90,9 +91,9 @@ def get_action_queue(db: Session = Depends(get_db)):
 
         days_diff = (SIMULATED_TODAY - log.check_out_date).days
         
-        eng = log.engine_hours_per_day
-        idle = log.idle_hours_per_day
-        idle_ratio = round((idle / (eng + idle) * 100.0), 1) if (eng + idle) > 0 else 0.0
+        eng = min(24.0, max(0.0, log.engine_hours_per_day or 0.0))
+        idle = min(eng, max(0.0, log.idle_hours_per_day or 0.0))
+        idle_ratio = round((idle / eng * 100.0), 1) if eng > 0 else 0.0
 
         site_name = site.site_name if site else "Unassigned Location"
         op_name = op.name if op else "Unassigned Operator"
@@ -309,10 +310,10 @@ def get_underutilized(
     results = []
 
     for log in logs:
-        eng = log.engine_hours_per_day
-        idle = log.idle_hours_per_day
+        eng = min(24.0, max(0.0, log.engine_hours_per_day or 0.0))
+        idle = min(eng, max(0.0, log.idle_hours_per_day or 0.0))
 
-        idle_efficiency_ratio = round((idle / (eng + idle) * 100.0), 1) if (eng + idle) > 0 else 0.0
+        idle_efficiency_ratio = round((idle / eng * 100.0), 1) if eng > 0 else 0.0
         productive_hours = round(max(0.0, eng - idle), 1)
 
         is_underutilized = idle_efficiency_ratio > threshold_pct
@@ -321,11 +322,18 @@ def get_underutilized(
         site = db.query(Site).filter(Site.site_id == log.site_id).first() if log.site_id else None
         op = db.query(Operator).filter(Operator.operator_id == log.operator_id).first() if log.operator_id else None
 
-        recommendation = "Optimal Machine Efficiency"
-        if idle_efficiency_ratio > 75.0:
-            recommendation = "Severe Engine Idling (>75% Idle Ratio). Immediate Reallocation or Telematics Shutdown!"
-        elif is_underutilized:
-            recommendation = "Underutilized (>50% Idle Ratio). Review Site Operating Hours & Transfer Asset."
+        # Determine Severity Flag and Recommendation dynamically based on telemetry & schedule
+        is_overdue = log.check_out_date < SIMULATED_TODAY
+        
+        if is_overdue:
+            severity_flag = "OVERDUE"
+            recommendation = f"Overdue ({(SIMULATED_TODAY - log.check_out_date).days}d Late). Request Machine Return & Recovery."
+        elif idle_efficiency_ratio > 50.0:
+            severity_flag = "IDLE"
+            recommendation = f"High Idle ({idle_efficiency_ratio}%). Reallocate Asset to New Quarry Site."
+        else:
+            severity_flag = "OPTIMAL"
+            recommendation = "Optimal Efficiency. Machine Operating Normally."
 
         results.append({
             "rental_id": log.rental_id,
@@ -339,7 +347,8 @@ def get_underutilized(
             "productive_hours": productive_hours,
             "idle_efficiency_ratio": idle_efficiency_ratio,
             "is_underutilized": is_underutilized,
-            "anomaly_flag": log.anomaly_flag or ("HIGH_IDLE_RATIO" if is_underutilized else "OPTIMAL"),
+            "severity_flag": severity_flag,
+            "anomaly_flag": severity_flag,
             "recommendation": recommendation
         })
 
