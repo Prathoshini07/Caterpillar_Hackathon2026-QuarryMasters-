@@ -10,20 +10,47 @@ router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
 SIMULATED_TODAY = datetime.date(2026, 7, 30)
 
+def compute_live_status(eq, log, today=SIMULATED_TODAY):
+    if eq.status == "AVAILABLE" or log is None:
+        return "Available"
+    
+    days_diff = (today - log.check_out_date).days
+    if days_diff > 0:
+        return "Overdue"
+    elif days_diff == 0:
+        return "Returning Today"
+        
+    eng = log.engine_hours_per_day or 0.0
+    idle = log.idle_hours_per_day or 0.0
+    tot = eng + idle
+    idle_ratio = (idle / tot * 100.0) if tot > 0 else 0.0
+    
+    if idle_ratio >= 50.0:
+        return "Idle"
+        
+    return "In Use"
+
 @router.get("/stats")
 def get_dashboard_stats(db: Session = Depends(get_db)):
     total_equipment = db.query(Equipment).count()
-    rented_count = db.query(Equipment).filter(Equipment.status == "RENTED").count()
-    available_count = db.query(Equipment).filter(Equipment.status == "AVAILABLE").count()
+    
+    # Compute counts dynamically based on the 5-state logic
+    counts = {
+        "Available": 0,
+        "In Use": 0,
+        "Idle": 0,
+        "Returning Today": 0,
+        "Overdue": 0
+    }
+    
+    equipments = db.query(Equipment).all()
+    for eq in equipments:
+        last_log = db.query(RentalLog).filter(RentalLog.equipment_id == eq.equipment_id).order_by(RentalLog.check_out_date.desc()).first()
+        status = compute_live_status(eq, last_log, SIMULATED_TODAY)
+        counts[status] += 1
 
-    # Overdue count
-    overdue_logs = db.query(RentalLog).filter(RentalLog.check_out_date < SIMULATED_TODAY).all()
-    overdue_count = len(overdue_logs)
-
-    # Underutilized calculation using Idle Efficiency Ratio = (idle_hours / engine_hours) * 100
-    # Threshold = 50%
+    # Overall Idle Ratio logic (keeping for metrics)
     all_logs = db.query(RentalLog).all()
-    underutilized_count = 0
     total_idle_ratio = 0.0
     valid_count = 0
 
@@ -32,8 +59,6 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
             idle_ratio = (log.idle_hours_per_day / (log.engine_hours_per_day + log.idle_hours_per_day)) * 100.0
             total_idle_ratio += idle_ratio
             valid_count += 1
-            if idle_ratio > 50.0:
-                underutilized_count += 1
 
     avg_idle_ratio = round(total_idle_ratio / valid_count, 1) if valid_count > 0 else 0.0
     avg_utilization = round(100.0 - avg_idle_ratio, 1)
@@ -41,10 +66,11 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
     return {
         "simulation_date": str(SIMULATED_TODAY),
         "total_equipment": total_equipment,
-        "rented_count": rented_count,
-        "available_count": available_count,
-        "overdue_count": overdue_count,
-        "underutilized_count": underutilized_count,
+        "available_count": counts["Available"],
+        "in_use_count": counts["In Use"],
+        "idle_count": counts["Idle"],
+        "returning_today_count": counts["Returning Today"],
+        "overdue_count": counts["Overdue"],
         "avg_idle_ratio_pct": avg_idle_ratio,
         "avg_utilization_pct": avg_utilization,
         "total_sites": db.query(Site).count(),
@@ -162,6 +188,52 @@ def get_available_equipment(db: Session = Depends(get_db)):
         "available_equipments": result
     }
 
+
+@router.get("/equipment")
+def get_all_equipment_details(db: Session = Depends(get_db)):
+    equipments = db.query(Equipment).all()
+    result = []
+    
+    for eq in equipments:
+        last_log = db.query(RentalLog).filter(RentalLog.equipment_id == eq.equipment_id).order_by(RentalLog.check_out_date.desc()).first()
+        site = db.query(Site).filter(Site.site_id == last_log.site_id).first() if last_log and last_log.site_id else None
+        op = db.query(Operator).filter(Operator.operator_id == last_log.operator_id).first() if last_log and last_log.operator_id else None
+        
+        live_status = compute_live_status(eq, last_log, SIMULATED_TODAY)
+        
+        # Calculate some extra telemetry data for the view
+        idle_ratio = 0.0
+        days_remaining = 0
+        days_overdue = 0
+        if last_log and live_status != "Available":
+            eng = last_log.engine_hours_per_day or 0.0
+            idle = last_log.idle_hours_per_day or 0.0
+            tot = eng + idle
+            idle_ratio = round((idle / tot * 100.0), 1) if tot > 0 else 0.0
+            
+            diff = (SIMULATED_TODAY - last_log.check_out_date).days
+            if diff > 0:
+                days_overdue = diff
+            else:
+                days_remaining = -diff
+        
+        result.append({
+            "equipment_id": eq.equipment_id,
+            "type": eq.type,
+            "live_status": live_status,
+            "site_name": site.site_name if site else "N/A",
+            "location": site.location if site else "N/A",
+            "operator_name": op.name if op else "N/A",
+            "idle_ratio": idle_ratio,
+            "days_remaining": days_remaining,
+            "days_overdue": days_overdue,
+            "check_out_date": str(last_log.check_out_date) if last_log else None
+        })
+        
+    return {
+        "count": len(result),
+        "equipments": result
+    }
 
 @router.get("/overdue-alerts")
 def get_overdue_alerts(db: Session = Depends(get_db)):

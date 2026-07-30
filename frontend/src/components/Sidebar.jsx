@@ -9,6 +9,7 @@ export default function Sidebar({ activeTab, setActiveTab, collapsed, setCollaps
     { id: 'overdue-alerts', label: '3. Overdue 5-Level Alerts', icon: AlertTriangle, badge: '5 Severities' },
     { id: 'underutilized', label: '4. Underutilized Assets', icon: Gauge },
     { id: 'datewise-returns', label: '5. Datewise Returns', icon: Calendar },
+    { id: 'equipment-details', label: '6. Live Details', icon: Layers },
   ];
 
   return (

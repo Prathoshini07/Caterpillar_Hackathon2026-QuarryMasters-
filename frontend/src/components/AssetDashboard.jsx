@@ -4,6 +4,7 @@ import {
   Search, Filter, ShieldAlert, AlertCircle, ArrowUpRight, Phone, MapPin, 
   Clock, Play, Pause, ChevronRight, X, Sparkles, Send, Lock, CalendarRange
 } from 'lucide-react';
+import LiveEquipmentDetails from './LiveEquipmentDetails';
 
 export default function AssetDashboard({ activeTab, setActiveTab }) {
   const [stats, setStats] = useState(null);
@@ -189,49 +190,34 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
           <div className="text-[11px] text-cat-subtext mt-1">100 EQX Units</div>
         </div>
 
-        <div className="bg-cat-card p-4 rounded-xl border border-cat-border">
-          <div className="text-cat-subtext text-xs uppercase font-medium">Active Rented</div>
-          <div className="text-2xl font-black text-amber-400 font-mono mt-1">{stats?.rented_count}</div>
-          <div className="text-[11px] text-cat-subtext mt-1">On Customer Sites</div>
-        </div>
-
-        <div 
-          onClick={() => setActiveTab('available')}
-          className="bg-cat-card p-4 rounded-xl border border-cat-border hover:border-emerald-500/50 cursor-pointer transition-all"
-        >
-          <div className="text-cat-subtext text-xs uppercase font-medium">Available Fleet</div>
+        <div className="bg-cat-card p-4 rounded-xl border border-cat-border hover:border-emerald-500/50 transition-all cursor-pointer" onClick={() => setActiveTab('equipment-details')}>
+          <div className="text-cat-subtext text-xs uppercase font-medium">Available</div>
           <div className="text-2xl font-black text-emerald-400 font-mono mt-1">{stats?.available_count}</div>
-          <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-            Ready to Rent <ArrowUpRight className="w-3 h-3" />
-          </div>
+          <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">Ready to rent <ArrowUpRight className="w-3 h-3" /></div>
         </div>
 
-        <div 
-          onClick={() => setActiveTab('overdue-alerts')}
-          className="bg-cat-card p-4 rounded-xl border border-cat-border hover:border-red-500/50 cursor-pointer transition-all"
-        >
-          <div className="text-cat-subtext text-xs uppercase font-medium">Overdue Items</div>
+        <div className="bg-cat-card p-4 rounded-xl border border-cat-border hover:border-blue-500/50 transition-all cursor-pointer" onClick={() => setActiveTab('equipment-details')}>
+          <div className="text-cat-subtext text-xs uppercase font-medium">In Use</div>
+          <div className="text-2xl font-black text-blue-400 font-mono mt-1">{stats?.in_use_count}</div>
+          <div className="text-[11px] text-blue-400 mt-1 flex items-center gap-1">Deployed <ArrowUpRight className="w-3 h-3" /></div>
+        </div>
+
+        <div className="bg-cat-card p-4 rounded-xl border border-cat-border hover:border-amber-500/50 transition-all cursor-pointer" onClick={() => setActiveTab('equipment-details')}>
+          <div className="text-cat-subtext text-xs uppercase font-medium">Idle</div>
+          <div className="text-2xl font-black text-amber-500 font-mono mt-1">{stats?.idle_count}</div>
+          <div className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">Low utilization <ArrowUpRight className="w-3 h-3" /></div>
+        </div>
+
+        <div className="bg-cat-card p-4 rounded-xl border border-cat-border hover:border-yellow-500/50 transition-all cursor-pointer" onClick={() => setActiveTab('equipment-details')}>
+          <div className="text-cat-subtext text-xs uppercase font-medium">Returning Today</div>
+          <div className="text-2xl font-black text-yellow-400 font-mono mt-1">{stats?.returning_today_count}</div>
+          <div className="text-[11px] text-yellow-400 mt-1 flex items-center gap-1">Due for return today <ArrowUpRight className="w-3 h-3" /></div>
+        </div>
+
+        <div className="bg-cat-card p-4 rounded-xl border border-cat-border hover:border-red-500/50 transition-all cursor-pointer" onClick={() => setActiveTab('equipment-details')}>
+          <div className="text-cat-subtext text-xs uppercase font-medium">Overdue</div>
           <div className="text-2xl font-black text-red-400 font-mono mt-1">{stats?.overdue_count}</div>
-          <div className="text-[11px] text-red-400 mt-1 flex items-center gap-1">
-            5 Alert Severities <ArrowUpRight className="w-3 h-3" />
-          </div>
-        </div>
-
-        <div 
-          onClick={() => setActiveTab('underutilized')}
-          className="bg-cat-card p-4 rounded-xl border border-cat-border hover:border-amber-500/50 cursor-pointer transition-all"
-        >
-          <div className="text-cat-subtext text-xs uppercase font-medium">Underutilized</div>
-          <div className="text-2xl font-black text-amber-500 font-mono mt-1">{stats?.underutilized_count}</div>
-          <div className="text-[11px] text-amber-400 mt-1 flex items-center gap-1">
-            Idle Ratio &gt; 50% <ArrowUpRight className="w-3 h-3" />
-          </div>
-        </div>
-
-        <div className="bg-cat-card p-4 rounded-xl border border-cat-border">
-          <div className="text-cat-subtext text-xs uppercase font-medium">Avg Idle Ratio</div>
-          <div className="text-2xl font-black text-cat-yellow font-mono mt-1">{stats?.avg_idle_ratio_pct}%</div>
-          <div className="text-[11px] text-cat-subtext mt-1">(Idle / (Engine + Idle)) * 100</div>
+          <div className="text-[11px] text-red-400 mt-1 flex items-center gap-1">Deadline exceeded <ArrowUpRight className="w-3 h-3" /></div>
         </div>
       </div>
 
@@ -972,6 +958,9 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
 
         </div>
       )}
+
+      {/* TAB 6: EQUIPMENT DETAILS */}
+      {activeTab === 'equipment-details' && <LiveEquipmentDetails />}
     </div>
   );
 }
