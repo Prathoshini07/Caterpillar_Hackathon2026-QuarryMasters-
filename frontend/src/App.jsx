@@ -4,10 +4,11 @@ import Sidebar from './components/Sidebar';
 import AssetDashboard from './components/AssetDashboard';
 import UserPortal from './components/UserPortal';
 import HistoryPortal from './components/HistoryPortal';
+import AnomalyDetection from './components/AnomalyDetection';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing'); // 'landing' or 'dashboard'
-  const [activeTab, setActiveTab] = useState('action-queue'); // 'action-queue', 'available', 'overdue-alerts', 'notifications-alerts', 'underutilized', 'datewise-returns'
+  const [activeTab, setActiveTab] = useState('action-queue'); // all tab IDs
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isReseeding, setIsReseeding] = useState(false);
   const [showPortal, setShowPortal] = useState(false);
@@ -69,10 +70,16 @@ export default function App() {
 
           {/* Main Content View */}
           <main className="flex-1 overflow-y-auto min-h-screen">
-            <AssetDashboard
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
+            {activeTab === 'anomaly-detection' ? (
+              <div className="p-6">
+                <AnomalyDetection />
+              </div>
+            ) : (
+              <AssetDashboard
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+              />
+            )}
           </main>
         </div>
       )}
