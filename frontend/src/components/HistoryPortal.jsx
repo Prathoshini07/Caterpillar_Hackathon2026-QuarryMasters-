@@ -132,11 +132,11 @@ export default function HistoryPortal({ onClose }) {
                     <Th label="Operator" sortKey="operator_name" />
                     <Th label="Check-In" sortKey="check_in_date" />
                     <Th label="Check-Out" sortKey="check_out_date" />
-                    <Th label="Runtime" sortKey="total_runtime_hrs" />
-                    <Th label="Idle" sortKey="total_idle_hrs" />
+                    <Th label="Runtime (h/day)" sortKey="runtime_hrs_per_day" />
+                    <Th label="Idle (h/day)" sortKey="idle_hrs_per_day" />
                     <Th label="Downtime" sortKey="total_downtime_hrs" />
                     <Th label="Fuel (L)" sortKey="fuel_usage_liters" />
-                    <Th label="Status" sortKey="anomaly_flag" />
+                    <Th label="Idle Flag" sortKey="anomaly_flag" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#2a3045]">
@@ -149,17 +149,20 @@ export default function HistoryPortal({ onClose }) {
                       <td className="px-4 py-3">{log.operator_name}</td>
                       <td className="px-4 py-3 text-slate-400">{log.check_in_date}</td>
                       <td className="px-4 py-3 text-slate-400">{log.check_out_date}</td>
-                      <td className="px-4 py-3 font-mono text-emerald-400">{log.total_runtime_hrs}h</td>
-                      <td className="px-4 py-3 font-mono text-amber-400">{log.total_idle_hrs}h</td>
+                      <td className="px-4 py-3 font-mono text-emerald-400 font-semibold">{log.runtime_hrs_per_day}h</td>
+                      <td className="px-4 py-3 font-mono text-amber-400 font-semibold">{log.idle_hrs_per_day}h</td>
                       <td className="px-4 py-3 font-mono text-red-400">{log.total_downtime_hrs}h</td>
                       <td className="px-4 py-3 font-mono">{log.fuel_usage_liters}L</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 text-[10px] font-bold rounded-md uppercase tracking-wide
-                          ${log.anomaly_flag === 'OPTIMAL' ? 'bg-emerald-500/20 text-emerald-400' : 
-                            log.anomaly_flag === 'HIGH_IDLE' ? 'bg-red-500/20 text-red-400' : 
-                            'bg-amber-500/20 text-amber-400'}`}>
-                          {log.anomaly_flag || 'N/A'}
-                        </span>
+                        {log.anomaly_flag === 'HIGH_IDLE_RATIO' ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-md uppercase tracking-wide bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                            ⚠ HIGH IDLE
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-md uppercase tracking-wide bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                            ✓ OPTIMAL
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

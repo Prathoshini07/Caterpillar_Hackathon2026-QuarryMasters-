@@ -288,8 +288,8 @@ export default function DemandForecastSection() {
               <span className="text-slate-300 font-bold">{summaryMetrics.sourceWeek}</span>
             </div>
             <div className="bg-cat-dark border border-cat-border px-3 py-1.5 rounded-lg text-[11px] font-mono">
-              <span className="text-cat-subtext">Forecast: </span>
-              <span className="text-emerald-400 font-bold">{summaryMetrics.forecastWeek}</span>
+              <span className="text-cat-subtext">Forecast Horizon: </span>
+              <span className="text-emerald-400 font-bold">2026-08-03 to 2026-08-10 (Next Week)</span>
             </div>
           </div>
         </div>
@@ -321,7 +321,7 @@ export default function DemandForecastSection() {
       {/* ── SUMMARY CARDS ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Forecast Week', value: summaryMetrics.forecastWeek, color: 'text-white', sub: '7-Day Forward Horizon', icon: <Calendar className="w-4 h-4 text-cat-yellow" /> },
+          { label: 'Forecast Week', value: summaryMetrics.forecastWeek || '2026-08-03', color: 'text-emerald-400', sub: 'Aug 03 – Aug 10, 2026 (Next Week)', icon: <Calendar className="w-4 h-4 text-cat-yellow" /> },
           { label: 'Current Demand', value: summaryMetrics.totalCurrent, color: 'text-blue-400', sub: 'Active Site Units', icon: <Layers className="w-4 h-4 text-blue-400" /> },
           { label: 'Predicted Demand', value: summaryMetrics.totalPredicted, color: 'text-cat-yellow', sub: 'ML Operational Count', icon: <TrendingUp className="w-4 h-4 text-cat-yellow" /> },
           { label: 'Add. Units Needed', value: `+${summaryMetrics.totalAdditional}`, color: 'text-amber-400', sub: 'Net Equipment Deficit', icon: <Zap className="w-4 h-4 text-amber-400" /> },

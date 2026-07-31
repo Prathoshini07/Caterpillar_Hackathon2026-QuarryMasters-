@@ -332,11 +332,27 @@ def get_rental_history(db: Session = Depends(get_db)):
         op   = db.query(Operator).filter(Operator.operator_id == log.operator_id).first()
 
         actual_days = log.rental_days if log.rental_days else 1
-        # Use stored total if available, otherwise derive from per-day avg × days
-        total_engine = log.total_engine_hours if log.total_engine_hours else round((log.engine_hours_per_day or 0) * actual_days, 1)
-        total_idle   = round((log.idle_hours_per_day or 0) * actual_days, 1)
-        total_active = round(total_engine - total_idle, 1)
-        total_downtime = round((24.0 - (log.engine_hours_per_day or 0)) * actual_days, 1)
+
+        # Per-day values (always < 24h) — clamp defensively to [0, 23.9]
+        runtime_per_day = round(min(max(log.engine_hours_per_day or 0, 0), 23.9), 1)
+        idle_per_day    = round(min(max(log.idle_hours_per_day or 0, 0), 23.9), 1)
+
+        # Ensure idle never exceeds runtime per day
+        if idle_per_day > runtime_per_day and runtime_per_day > 0:
+            idle_per_day = runtime_per_day
+
+        # 2-state flag: HIGH_IDLE_RATIO when idle/(runtime+idle) >= 50%, else OPTIMAL
+        total_hrs = runtime_per_day + idle_per_day
+        if total_hrs > 0 and (idle_per_day / total_hrs) >= 0.5:
+            clean_flag = "HIGH_IDLE_RATIO"
+        else:
+            clean_flag = "OPTIMAL"
+
+        # Totals (for other modules that may still need them)
+        actual_days = log.rental_days if log.rental_days else 1
+        total_engine   = log.total_engine_hours if log.total_engine_hours else round(runtime_per_day * actual_days, 1)
+        total_idle_hrs = round(idle_per_day * actual_days, 1)
+        total_downtime = round((24.0 - runtime_per_day) * actual_days, 1)
 
         result.append({
             "rental_id":           log.rental_id,
@@ -350,15 +366,18 @@ def get_rental_history(db: Session = Depends(get_db)):
             "check_in_date":       str(log.check_in_date),
             "check_out_date":      str(log.check_out_date),
             "rental_days":         actual_days,
-            "engine_hrs_per_day":  log.engine_hours_per_day or 0,
-            "idle_hrs_per_day":    log.idle_hours_per_day or 0,
+            # Per-day columns (< 24h each) — used in the History table
+            "runtime_hrs_per_day": runtime_per_day,
+            "idle_hrs_per_day":    idle_per_day,
+            # Legacy totals kept for other callers
+            "engine_hrs_per_day":  runtime_per_day,
             "total_engine_hrs":    total_engine,
-            "total_idle_hrs":      total_idle,
-            "total_active_hrs":    total_active,
+            "total_idle_hrs":      total_idle_hrs,
             "total_downtime_hrs":  total_downtime,
             "fuel_usage_liters":   log.fuel_usage_liters or 0,
             "idle_penalty_usd":    log.accumulated_idle_penalty_usd or 0,
-            "anomaly_flag":        log.anomaly_flag or "N/A",
+            # 2-state flag: HIGH_IDLE_RATIO | OPTIMAL
+            "anomaly_flag":        clean_flag,
             "is_overdue":          log.is_overdue,
         })
 

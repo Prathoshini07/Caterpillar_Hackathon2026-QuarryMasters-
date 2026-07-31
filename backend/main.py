@@ -1,14 +1,11 @@
+import datetime
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
-
 from database import engine, Base, SessionLocal
 from models import Site, Equipment, RentalLog
-from routers import dashboard, portal, forecast
+from routers import dashboard, portal, anomaly, optimization, forecast
 from seed_data import generate_100_seeds
 from ml.prediction_service import prediction_service
-from startup_migrations import run_startup_migrations
-
 
 app = FastAPI(
     title="Caterpillar Smart Rental Tracking API",
@@ -20,7 +17,6 @@ app = FastAPI(
     version="1.0.0",
 )
 
-
 # Enable CORS for React frontend
 app.add_middleware(
     CORSMiddleware,
@@ -30,35 +26,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Register routers
+# Register Routers
 app.include_router(dashboard.router)
 app.include_router(portal.router)
 app.include_router(anomaly.router)
 app.include_router(optimization.router)
+app.include_router(forecast.router)
 
 @app.on_event("startup")
 def startup_db() -> None:
-    # 1. Create tables that do not exist yet.
+    # 1. Create tables that do not exist yet
     Base.metadata.create_all(bind=engine)
 
-    # 2. Upgrade existing tables before querying them.
-    run_startup_migrations(engine)
-    run_legacy_rental_log_migrations()
-
-    # 3. Load the ML model only after the database schema is valid.
+    # 2. Load the ML prediction model
     try:
         prediction_service.load_model()
     except Exception as exc:
-        print(
-            "[WARNING] Failed to load ML prediction service model: "
-            f"{exc}"
-        )
+        print(f"[WARNING] Failed to load ML prediction service model: {exc}")
 
-    # 4. Check whether legacy seed data is required.
+    # 3. SQLite schema migrations
     db = SessionLocal()
     try:
-        # SQLite migration: add new columns if they don't exist
         with engine.connect() as conn:
             existing_log_cols = [row[1] for row in conn.execute(
                 __import__('sqlalchemy').text("PRAGMA table_info(rental_logs)")
@@ -83,32 +71,18 @@ def startup_db() -> None:
                 ))
                 conn.commit()
 
-        # Check if DB needs legacy seeding (only when all core operational tables are completely empty)
+        # 4. Check if legacy database seeding is required
         sites_count = db.query(Site).count()
         equipment_count = db.query(Equipment).count()
         rental_count = db.query(RentalLog).count()
 
-        if (
-            sites_count == 0
-            and equipment_count == 0
-            and rental_count == 0
-        ):
-            print(
-                "Database is completely empty. "
-                "Seeding database with 100 legacy rows per table..."
-            )
+        if sites_count == 0 and equipment_count == 0 and rental_count == 0:
+            print("Database is completely empty. Seeding database with 100 legacy rows per table...")
             generate_100_seeds(db)
         else:
-            print(
-                "Database contains existing data "
-                f"({sites_count} sites, "
-                f"{equipment_count} equipment, "
-                f"{rental_count} rental logs). "
-                "Skipping auto-seeding."
-            )
+            print(f"Database contains existing data ({sites_count} sites, {equipment_count} equipment, {rental_count} rental logs). Skipping auto-seeding.")
     finally:
         db.close()
-
 
 @app.get("/")
 def root():
@@ -116,5 +90,5 @@ def root():
         "status": "Online",
         "system": "Caterpillar Smart Rental Tracking System",
         "docs": "/docs",
-        "simulation_date": str(__import__('datetime').date.today())
+        "simulation_date": str(datetime.date.today())
     }

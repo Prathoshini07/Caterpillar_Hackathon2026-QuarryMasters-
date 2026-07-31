@@ -345,14 +345,18 @@ class PredictionService:
             else:
                 risk_level = "LOW"
 
-            forecast_week_date = latest_week + datetime.timedelta(days=7)
+            forecast_week_start_date = latest_week + datetime.timedelta(days=7)
+            forecast_week_end_date   = forecast_week_start_date + datetime.timedelta(days=7)
 
             results.append({
                 "site_id": s_id,
                 "site_name": s_name,
                 "equipment_type": eq_type,
                 "source_week": latest_week.strftime("%Y-%m-%d"),
-                "forecast_week": forecast_week_date.strftime("%Y-%m-%d"),
+                "forecast_week": forecast_week_start_date.strftime("%Y-%m-%d"),
+                "forecast_week_start": forecast_week_start_date.strftime("%Y-%m-%d"),
+                "forecast_week_end": forecast_week_end_date.strftime("%Y-%m-%d"),
+                "forecast_period": f"{forecast_week_start_date.strftime('%Y-%m-%d')} to {forecast_week_end_date.strftime('%Y-%m-%d')}",
                 "current_demand": curr_d,
                 "raw_model_prediction": round(r_pred, 4),
                 "predicted_demand": pred_d,
