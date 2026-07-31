@@ -5,3 +5,8 @@ pydantic
 python-multipart
 scikit-learn
 numpy
+catboost
+psycopg2
+pandas
+mlxtend
+
