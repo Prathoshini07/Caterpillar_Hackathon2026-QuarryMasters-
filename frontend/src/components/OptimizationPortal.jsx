@@ -214,7 +214,7 @@ export default function OptimizationPortal() {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] font-black px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-400 rounded tracking-wider">
-                          EXCESS IDLE PENALTY INVOICE
+                          #{idx + 1} EXCESS IDLE PENALTY INVOICE
                         </span>
                         <span className="text-xs font-mono text-cat-subtext">
                           Rental Ref: {invoice.rental_id}
@@ -358,7 +358,7 @@ export default function OptimizationPortal() {
                       </div>
                       
                       <h4 className="text-white font-black text-base flex items-center gap-2">
-                        {maint.equipment_id} <span className="text-cat-subtext font-normal text-xs">({maint.equipment_type})</span> — {maint.site_name}
+                        <span className="text-cat-yellow text-xs font-mono">#{idx + 1}</span> {maint.equipment_id} <span className="text-cat-subtext font-normal text-xs">({maint.equipment_type})</span> — {maint.site_name}
                       </h4>
                     </div>
 

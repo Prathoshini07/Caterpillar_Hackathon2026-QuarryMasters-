@@ -563,6 +563,7 @@ export default function DemandForecastSection() {
             <table className="w-full text-left text-xs text-slate-200">
               <thead className="bg-cat-steel text-cat-subtext font-bold uppercase tracking-wider text-[11px] border-b border-cat-border">
                 <tr>
+                  <th className="py-3 px-4 text-center">#</th>
                   <th className="py-3 px-4">Site</th>
                   <th
                     className="py-3 px-4 cursor-pointer hover:text-white select-none"
@@ -596,12 +597,13 @@ export default function DemandForecastSection() {
               <tbody className="divide-y divide-cat-border/50">
                 {tableData.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-cat-subtext">
+                    <td colSpan={9} className="py-12 text-center text-cat-subtext">
                       No rows match the selected filters. Try adjusting the search or risk filter.
                     </td>
                   </tr>
                 ) : tableData.map((row, idx) => (
                   <tr key={`${row.site_id}-${row.equipment_type}-${idx}`} className="hover:bg-cat-steel/40 transition-colors">
+                    <td className="py-3 px-4 text-center font-mono text-cat-subtext font-bold">{idx + 1}</td>
                     <td className="py-3 px-4">
                       <div className="font-bold text-white leading-tight">{row.site_name || row.site_id}</div>
                       <div className="text-[10px] text-cat-subtext font-mono">{row.site_id}</div>

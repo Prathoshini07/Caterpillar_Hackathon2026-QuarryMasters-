@@ -1,0 +1,121 @@
+equipment_id,type,status,current_site_id,assigned_operator_id
+EQX1001,Excavator,Available,,
+EQX1002,Excavator,Available,,
+EQX1003,Excavator,Available,,
+EQX1004,Excavator,Available,,
+EQX1005,Excavator,Available,,
+EQX1006,Excavator,Available,,
+EQX1007,Excavator,Available,,
+EQX1008,Excavator,In Use,S001,OP105
+EQX1009,Excavator,In Use,S009,
+EQX1010,Excavator,Available,,
+EQX1011,Excavator,Available,,
+EQX1012,Excavator,Idle,S003,OP114
+EQX1013,Excavator,Available,,
+EQX1014,Excavator,Available,,
+EQX1015,Excavator,Available,,
+EQX1016,Excavator,Available,,
+EQX1017,Excavator,Available,,
+EQX1018,Excavator,In Use,S003,OP128
+EQX1019,Excavator,Under Maintenance,,
+EQX1020,Excavator,Available,,
+EQX1021,Excavator,Idle,S010,OP125
+EQX1022,Excavator,Available,,
+EQX1023,Excavator,In Use,S008,OP101
+EQX1024,Excavator,Available,,
+EQX1025,Excavator,Available,,
+EQX1026,Excavator,Available,,
+EQX1027,Excavator,Available,,
+EQX1028,Excavator,Under Maintenance,,
+EQX1029,Bulldozer,In Use,S006,OP139
+EQX1030,Bulldozer,Available,,
+EQX1031,Bulldozer,Available,,
+EQX1032,Bulldozer,Available,,
+EQX1033,Bulldozer,Available,,
+EQX1034,Bulldozer,Available,,
+EQX1035,Bulldozer,Available,,
+EQX1036,Bulldozer,Available,,
+EQX1037,Bulldozer,Available,,
+EQX1038,Bulldozer,In Use,S001,OP117
+EQX1039,Bulldozer,Available,,
+EQX1040,Bulldozer,Available,,
+EQX1041,Bulldozer,Available,,
+EQX1042,Bulldozer,Under Maintenance,,
+EQX1043,Bulldozer,Available,,
+EQX1044,Bulldozer,In Use,S003,OP138
+EQX1045,Bulldozer,Available,,
+EQX1046,Bulldozer,Available,,
+EQX1047,Bulldozer,In Use,S009,OP101
+EQX1048,Bulldozer,Under Maintenance,,
+EQX1049,Grader,Available,,
+EQX1050,Grader,In Use,S005,OP124
+EQX1051,Grader,Idle,S008,OP128
+EQX1052,Grader,Available,,
+EQX1053,Grader,Available,,
+EQX1054,Grader,Available,,
+EQX1055,Grader,Available,,
+EQX1056,Grader,Available,,
+EQX1057,Grader,Available,,
+EQX1058,Grader,Available,,
+EQX1059,Grader,Available,,
+EQX1060,Grader,In Use,S002,OP105
+EQX1061,Grader,Available,,
+EQX1062,Grader,Available,,
+EQX1063,Grader,Available,,
+EQX1064,Grader,Available,,
+EQX1065,Crane,In Use,S002,OP133
+EQX1066,Crane,In Use,S007,OP115
+EQX1067,Crane,In Use,S002,OP140
+EQX1068,Crane,Idle,S008,OP120
+EQX1069,Crane,In Use,S002,OP131
+EQX1070,Crane,Available,,
+EQX1071,Crane,Available,,
+EQX1072,Crane,Available,,
+EQX1073,Crane,Available,,
+EQX1074,Crane,Idle,S001,OP129
+EQX1075,Crane,Available,,
+EQX1076,Crane,Available,,
+EQX1077,Crane,In Use,S010,OP113
+EQX1078,Crane,Available,,
+EQX1079,Crane,Available,,
+EQX1080,Crane,Available,,
+EQX1081,Loader,In Use,S004,OP119
+EQX1082,Loader,Available,,
+EQX1083,Loader,Available,,
+EQX1084,Loader,Available,,
+EQX1085,Loader,In Use,S004,OP116
+EQX1086,Loader,Available,,
+EQX1087,Loader,Idle,S007,OP132
+EQX1088,Loader,Available,,
+EQX1089,Loader,In Use,S001,OP115
+EQX1090,Loader,Available,,
+EQX1091,Loader,Under Maintenance,,
+EQX1092,Loader,Available,,
+EQX1093,Loader,Available,,
+EQX1094,Loader,In Use,S004,OP145
+EQX1095,Loader,In Use,S009,
+EQX1096,Loader,Available,,
+EQX1097,Loader,Available,,
+EQX1098,Loader,Available,,
+EQX1099,Loader,Available,,
+EQX1100,Loader,Available,,
+EQX1101,Loader,In Use,S001,OP128
+EQX1102,Loader,Available,,
+EQX1103,Roller,Available,,
+EQX1104,Roller,Available,,
+EQX1105,Roller,In Use,S007,OP105
+EQX1106,Roller,Available,,
+EQX1107,Roller,Available,,
+EQX1108,Roller,Available,,
+EQX1109,Roller,Available,,
+EQX1110,Roller,Available,,
+EQX1111,Roller,In Use,S008,OP127
+EQX1112,Roller,Available,,
+EQX1113,Roller,In Use,S008,OP115
+EQX1114,Roller,Available,,
+EQX1115,Roller,Available,,
+EQX1116,Roller,Available,,
+EQX1117,Roller,Available,,
+EQX1118,Roller,Available,,
+EQX1119,Roller,Available,,
+EQX1120,Roller,Available,,

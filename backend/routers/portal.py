@@ -140,10 +140,12 @@ def checkout_equipment(payload: CheckOutRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404,
             detail=f"Rental ID '{payload.rental_id}' not found. Please enter the ID generated during check-in.")
 
-    # 2. Check if already checked out
-    if log.engine_hours_per_day != 0.0 or log.idle_hours_per_day != 0.0:
+    # 2. Check if already checked out — the reliable signal is equipment status = AVAILABLE,
+    #    because a successful checkout always sets the equipment back to AVAILABLE.
+    eq = db.query(Equipment).filter(Equipment.equipment_id == log.equipment_id).first()
+    if eq and eq.status == "AVAILABLE":
         raise HTTPException(status_code=409,
-            detail=f"Rental '{payload.rental_id}' has already been checked out.")
+            detail=f"Rental '{payload.rental_id}' has already been checked out. Equipment '{log.equipment_id}' is already marked AVAILABLE.")
 
     # 3. Validate hours — inputs are TOTALS for the whole rental period
     if payload.total_engine_hours <= 0:
@@ -156,12 +158,14 @@ def checkout_equipment(payload: CheckOutRequest, db: Session = Depends(get_db)):
     if payload.fuel_usage_liters < 0:
         raise HTTPException(status_code=422, detail="Fuel usage cannot be negative.")
 
-    # 4. Fetch equipment early (needed for maintenance tracker)
-    eq = db.query(Equipment).filter(Equipment.equipment_id == log.equipment_id).first()
+    # 4. Equipment already fetched above (needed for maintenance tracker)
 
     # ── Step A: Actual rental duration ────────────────────────────────────────
-    original_planned_checkout = log.check_out_date
-    actual_days = (payload.checkout_date - log.check_in_date).days or log.rental_days
+    # The actual checkout date is exactly what the user provides — NOT the expected date.
+    original_planned_checkout = log.check_out_date   # expected date stored at check-in
+    actual_days = (payload.checkout_date - log.check_in_date).days
+    if actual_days <= 0:
+        actual_days = 1   # same-day rental: treat as at least 1 day to avoid division by zero
 
     # ── Step B: Derive per-day averages from entered totals ───────────────────
     #   Formula: average = total ÷ actual_rental_days

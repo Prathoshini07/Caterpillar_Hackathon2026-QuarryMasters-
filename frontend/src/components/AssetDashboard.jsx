@@ -315,7 +315,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
           }`}
         >
           <TrendingUp className="w-4 h-4" />
-          7. Demand Forecast (CatBoost ML)
+          6. Demand Forecast (CatBoost ML)
         </button>
       </div>
 
@@ -539,7 +539,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
                           onClick={() => setSelectedAlertItem(item)}
                         >
                           <div className="flex justify-between font-mono font-bold text-cat-yellow">
-                            <span>{item.equipment_id}</span>
+                            <span>#{idx + 1} {item.equipment_id}</span>
                             <span className="text-red-400">+{item.days_overdue}d</span>
                           </div>
                           <div className="text-white font-medium">{item.type}</div>
@@ -603,6 +603,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
               <table className="w-full text-left text-xs">
                 <thead className="bg-cat-steel text-cat-subtext uppercase font-bold text-[10px] tracking-wider">
                   <tr>
+                    <th className="p-3">#</th>
                     <th className="p-3">Equipment ID</th>
                     <th className="p-3">Type</th>
                     <th className="p-3">Site Location</th>
@@ -615,13 +616,14 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-cat-border bg-cat-card">
-                  {underutilized.equipments.map((item) => (
+                  {underutilized.equipments.map((item, idx) => (
                     <tr 
                       key={item.rental_id}
                       className={`hover:bg-cat-cardHover transition-colors ${
                         item.is_underutilized ? 'bg-amber-500/5' : ''
                       }`}
                     >
+                      <td className="p-3 font-mono text-cat-subtext font-bold">{idx + 1}</td>
                       <td className="p-3 font-mono font-bold text-cat-yellow">{item.equipment_id}</td>
                       <td className="p-3 font-semibold text-white">{item.type}</td>
                       <td className="p-3 text-slate-300">{item.site_name}</td>
@@ -750,6 +752,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
               <table className="w-full text-left text-xs">
                 <thead className="bg-cat-steel text-cat-subtext uppercase font-bold text-[10px] tracking-wider">
                   <tr>
+                    <th className="p-3">#</th>
                     <th className="p-3">Equipment ID</th>
                     <th className="p-3">Type</th>
                     <th className="p-3">Site & Location</th>
@@ -772,8 +775,9 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
                       }
                       return true;
                     })
-                    .map((item) => (
+                    .map((item, idx) => (
                       <tr key={item.rental_id} className="hover:bg-cat-cardHover transition-colors bg-red-500/5">
+                        <td className="p-3 font-mono text-cat-subtext font-bold">{idx + 1}</td>
                         <td className="p-3 font-mono font-bold text-cat-yellow">{item.equipment_id}</td>
                         <td className="p-3 font-semibold text-white">{item.type}</td>
                         <td className="p-3 text-slate-300">{item.site_name} ({item.location})</td>
@@ -837,6 +841,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
               <table className="w-full text-left text-xs">
                 <thead className="bg-cat-steel text-cat-subtext uppercase font-bold text-[10px] tracking-wider">
                   <tr>
+                    <th className="p-3">#</th>
                     <th className="p-3">Equipment ID</th>
                     <th className="p-3">Type</th>
                     <th className="p-3">Site & Location</th>
@@ -851,8 +856,9 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
                 <tbody className="divide-y divide-cat-border bg-cat-card">
                   {datewiseData.today_returns
                     .filter(item => !todaySearch || item.equipment_id.toLowerCase().includes(todaySearch.toLowerCase()) || item.site_name.toLowerCase().includes(todaySearch.toLowerCase()))
-                    .map((item) => (
+                    .map((item, idx) => (
                       <tr key={item.rental_id} className="hover:bg-cat-cardHover transition-colors bg-cat-yellow/5">
+                        <td className="p-3 font-mono text-cat-subtext font-bold">{idx + 1}</td>
                         <td className="p-3 font-mono font-bold text-cat-yellow">{item.equipment_id}</td>
                         <td className="p-3 font-semibold text-white">{item.type}</td>
                         <td className="p-3 text-slate-300">{item.site_name} ({item.location})</td>
@@ -939,6 +945,7 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
               <table className="w-full text-left text-xs">
                 <thead className="bg-cat-steel text-cat-subtext uppercase font-bold text-[10px] tracking-wider">
                   <tr>
+                    <th className="p-3">#</th>
                     <th className="p-3">Equipment ID</th>
                     <th className="p-3">Type</th>
                     <th className="p-3">Site & Location</th>
@@ -961,8 +968,9 @@ export default function AssetDashboard({ activeTab, setActiveTab }) {
                       }
                       return true;
                     })
-                    .map((item) => (
+                    .map((item, idx) => (
                       <tr key={item.rental_id} className="hover:bg-cat-cardHover transition-colors">
+                        <td className="p-3 font-mono text-cat-subtext font-bold">{idx + 1}</td>
                         <td className="p-3 font-mono font-bold text-cat-yellow">{item.equipment_id}</td>
                         <td className="p-3 font-semibold text-white">{item.type}</td>
                         <td className="p-3 text-slate-300">{item.site_name} ({item.location})</td>

@@ -8,7 +8,7 @@ from seed_data import generate_100_seeds
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
-SIMULATED_TODAY = datetime.date(2026, 7, 30)
+SIMULATED_TODAY = datetime.date.today()
 
 def compute_live_status(eq, log, today=SIMULATED_TODAY):
     if eq.status == "AVAILABLE" or log is None:
@@ -85,6 +85,11 @@ def get_action_queue(db: Session = Depends(get_db)):
 
     for log in logs:
         eq = db.query(Equipment).filter(Equipment.equipment_id == log.equipment_id).first()
+
+        # Skip equipment already marked AVAILABLE — rental has been completed
+        if eq and eq.status == "AVAILABLE":
+            continue
+
         site = db.query(Site).filter(Site.site_id == log.site_id).first() if log.site_id else None
         op = db.query(Operator).filter(Operator.operator_id == log.operator_id).first() if log.operator_id else None
 
@@ -250,6 +255,11 @@ def get_overdue_alerts(db: Session = Depends(get_db)):
     for log in overdue_logs:
         days_late = (SIMULATED_TODAY - log.check_out_date).days
         eq = db.query(Equipment).filter(Equipment.equipment_id == log.equipment_id).first()
+
+        # Skip equipment already marked AVAILABLE — it has been returned
+        if eq and eq.status == "AVAILABLE":
+            continue
+
         site = db.query(Site).filter(Site.site_id == log.site_id).first() if log.site_id else None
         op = db.query(Operator).filter(Operator.operator_id == log.operator_id).first() if log.operator_id else None
 
@@ -287,9 +297,10 @@ def get_overdue_alerts(db: Session = Depends(get_db)):
         levels[lvl]["count"] += 1
         levels[lvl]["items"].append(item)
 
+    total_overdue = sum(lvl["count"] for lvl in levels.values())
     return {
         "simulation_date": str(SIMULATED_TODAY),
-        "total_overdue": len(overdue_logs),
+        "total_overdue": total_overdue,
         "levels": levels
     }
 
@@ -369,6 +380,11 @@ def get_datewise_returns(db: Session = Depends(get_db)):
 
     for log in logs:
         eq = db.query(Equipment).filter(Equipment.equipment_id == log.equipment_id).first()
+
+        # Skip equipment already marked AVAILABLE — it has been returned, not outstanding
+        if eq and eq.status == "AVAILABLE":
+            continue
+
         site = db.query(Site).filter(Site.site_id == log.site_id).first() if log.site_id else None
         op = db.query(Operator).filter(Operator.operator_id == log.operator_id).first() if log.operator_id else None
 

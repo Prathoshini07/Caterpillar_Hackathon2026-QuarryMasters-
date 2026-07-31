@@ -1,7 +1,7 @@
 /**
  * useSmolLM2.js
  * Runs SmolLM2-135M-Instruct fully in-browser via @huggingface/transformers (WASM).
- * No API key required. Model is downloaded from HuggingFace Hub on first use.
+ * Uses browser Cache API to cache model weights locally after initial download.
  */
 import { useState, useCallback, useRef } from 'react';
 
@@ -15,20 +15,27 @@ async function getPipeline() {
     return new Promise((resolve) => listeners.push(resolve));
   }
   pipelineLoading = true;
-  const { pipeline } = await import('@huggingface/transformers');
-  pipelineInstance = await pipeline(
-    'text-generation',
-    'HuggingFaceTB/SmolLM2-135M-Instruct',
-    { dtype: 'q4', device: 'wasm' }
-  );
-  listeners.forEach((r) => r(pipelineInstance));
-  listeners.length = 0;
-  pipelineLoading = false;
-  return pipelineInstance;
+  try {
+    const { pipeline, env } = await import('@huggingface/transformers');
+    // Enable browser cache API so weights are stored permanently in browser storage
+    env.allowLocalModels = false;
+    env.useBrowserCache = true;
+
+    pipelineInstance = await pipeline(
+      'text-generation',
+      'HuggingFaceTB/SmolLM2-135M-Instruct',
+      { dtype: 'q4', device: 'wasm' }
+    );
+    listeners.forEach((r) => r(pipelineInstance));
+    listeners.length = 0;
+    return pipelineInstance;
+  } finally {
+    pipelineLoading = false;
+  }
 }
 
 /**
- * @returns {{ generate, summary, loading, error, modelLoading }}
+ * @returns {{ generate, summary, loading, error, modelLoading, cancel }}
  */
 export function useSmolLM2() {
   const [summary, setSummary] = useState('');
@@ -43,7 +50,9 @@ export function useSmolLM2() {
     abortRef.current = false;
 
     try {
-      setModelLoading(true);
+      if (!pipelineInstance) {
+        setModelLoading(true);
+      }
       const gen = await getPipeline();
       setModelLoading(false);
       setLoading(true);

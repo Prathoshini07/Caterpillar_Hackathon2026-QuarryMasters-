@@ -117,6 +117,7 @@ export default function LiveEquipmentDetails() {
           <table className="w-full text-sm text-left whitespace-nowrap">
             <thead className="bg-cat-dark/80 border-b border-cat-border sticky top-0 z-10 backdrop-blur-md">
               <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors">#</th>
                 <Th label="Equipment" sortKey="equipment_id" />
                 <Th label="Status" sortKey="live_status" />
                 <Th label="Assigned Site" sortKey="site_name" />
@@ -127,8 +128,9 @@ export default function LiveEquipmentDetails() {
               </tr>
             </thead>
             <tbody className="divide-y divide-cat-border">
-              {sortedData.map(eq => (
+              {sortedData.map((eq, idx) => (
                 <tr key={eq.equipment_id} className="hover:bg-cat-dark/40 transition-colors">
+                  <td className="px-4 py-3 font-mono text-cat-subtext font-bold">{idx + 1}</td>
                   <td className="px-4 py-3">
                     <div className="font-mono text-cat-yellow font-bold">{eq.equipment_id}</div>
                     <div className="text-xs text-cat-subtext">{eq.type}</div>

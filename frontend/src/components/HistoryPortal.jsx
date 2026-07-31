@@ -125,6 +125,7 @@ export default function HistoryPortal({ onClose }) {
               <table className="w-full text-sm text-left whitespace-nowrap">
                 <thead className="bg-[#2a3045]/50 sticky top-0 z-10 backdrop-blur-md">
                   <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">#</th>
                     <Th label="Rental ID" sortKey="rental_id" />
                     <Th label="Equipment" sortKey="equipment_id" />
                     <Th label="Site" sortKey="site_name" />
@@ -139,8 +140,9 @@ export default function HistoryPortal({ onClose }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#2a3045]">
-                  {sortedLogs.map(log => (
+                  {sortedLogs.map((log, idx) => (
                     <tr key={log.rental_id} className="hover:bg-yellow-400/5 transition-colors">
+                      <td className="px-4 py-3 font-mono text-slate-400 font-bold">{idx + 1}</td>
                       <td className="px-4 py-3 font-mono text-yellow-400">{log.rental_id}</td>
                       <td className="px-4 py-3">{log.equipment_id} <span className="text-slate-500 text-xs">({log.equipment_type})</span></td>
                       <td className="px-4 py-3">{log.site_name}</td>
