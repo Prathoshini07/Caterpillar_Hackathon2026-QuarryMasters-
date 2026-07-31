@@ -53,6 +53,16 @@ def parse_bool(val: Any) -> bool:
     s = str(val).strip().lower()
     return s in ("true", "1", "t", "y", "yes")
 
+def calculate_total_engine_hours(
+    engine_hours_per_day: float,
+    rental_days: int,
+) -> float:
+    """Calculate total engine hours for an imported historical rental."""
+    return round(
+        max(0.0, engine_hours_per_day) * max(0, rental_days),
+        2,
+    )
+
 
 def resolve_data_dir(custom_path: str = None) -> Path:
     if custom_path:
@@ -316,7 +326,8 @@ def main():
                         type=eq_type,
                         status=norm_status,
                         current_site_id=s_id,
-                        assigned_operator_id=op_id
+                        assigned_operator_id=op_id,
+                        cumulative_engine_hours=0.0,
                     ))
 
             # Rental Logs
@@ -331,6 +342,11 @@ def main():
                 eng_hrs = float(row.get("engine_hours_per_day", 0))
                 idle_hrs = float(row.get("idle_hours_per_day", 0))
                 r_days = int(row.get("rental_days", 0))
+                total_engine_hours = calculate_total_engine_hours(
+                    eng_hrs,
+                    r_days,
+                )
+
                 is_overdue = parse_bool(row.get("is_overdue"))
                 raw_anomaly = row.get("anomaly_flag", "").strip() if row.get("anomaly_flag") else ""
                 norm_anomaly = ANOMALY_MAP.get(raw_anomaly, raw_anomaly or "OPTIMAL")
@@ -350,7 +366,10 @@ def main():
                         is_overdue=is_overdue,
                         anomaly_flag=norm_anomaly,
                         location=site_location_map.get(s_id) if s_id else None,
-                        fuel_usage_liters=None
+                        fuel_usage_liters=None,
+                        total_engine_hours=total_engine_hours,
+                        accumulated_idle_penalty_usd=0.0,
+                        last_serviced_engine_hours=0.0,
                     ))
 
             # Weekly Demand
@@ -648,7 +667,7 @@ def main():
                     is_overdue=is_overdue,
                     anomaly_flag=norm_anomaly,
                     location=derived_location,
-                    fuel_usage_liters=None
+                    fuel_usage_liters=None,
                 )
                 rental_logs_to_insert.append(r_obj)
                 summary["Rental Logs"]["INSERT"] += 1
